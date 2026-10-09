@@ -1,0 +1,248 @@
+<script lang="ts">
+  import { onDestroy } from 'svelte'
+  import HeroIcon from './HeroIcon.svelte'
+  import PlayerPicker from './PlayerPicker.svelte'
+  import { mmss } from '../lib/format'
+  import type { MatchDetail, Player } from '../lib/types'
+
+  let { match, focus = $bindable() }: { match: MatchDetail; focus: number | null } = $props()
+
+  const TEAM_COLOURS = ['#e8a33a', '#4b93f2']
+  const TRAIL_S = 12
+  const KILL_FLASH_S = 6
+
+  // ?t=600 opens the replay at that second, so a moment can be shared as a link.
+  let t = $state(Math.max(0, Number(new URLSearchParams(location.search).get('t')) || 0))
+  let playing = $state(false)
+  let speed = $state(16)
+  let showTrails = $state(true)
+  let showDeaths = $state(true)
+  let showHeat = $state(false)
+
+  const bySlot = $derived(new Map(match.players.map((p) => [p.slot, p])))
+  const samples = $derived(Math.max(...Object.values(match.paths.players).map((p) => p.x.length)))
+  const tmax = $derived(Math.min(match.duration_s, (samples - 1) * match.paths.interval_s))
+  const deathsSoFar = $derived(match.deaths.filter((d) => d.t <= t))
+  const focusedPlayer = $derived(focus === null ? null : bySlot.get(focus) ?? null)
+
+  let canvas: HTMLCanvasElement
+  let box: HTMLDivElement
+  let size = $state(600)
+  let img: HTMLImageElement | null = $state(null)
+  let imgFailed = $state(false)
+
+  $effect(() => {
+    const i = new Image()
+    i.onload = () => (img = i)
+    i.onerror = () => (imgFailed = true)
+    i.src = match.map.image
+  })
+
+  $effect(() => {
+    const ro = new ResizeObserver(([e]) => (size = Math.floor(e.contentRect.width)))
+    ro.observe(box)
+    return () => ro.disconnect()
+  })
+
+  // Animation loop for playback.
+  let raf = 0
+  let last = 0
+  function tick(now: number) {
+    if (!playing) return
+    if (last) t = Math.min(tmax, t + ((now - last) / 1000) * speed)
+    last = now
+    if (t >= tmax) playing = false
+    else raf = requestAnimationFrame(tick)
+  }
+  function toggle() {
+    if (playing) { playing = false; return }
+    if (t >= tmax) t = 0
+    playing = true
+    last = 0
+    raf = requestAnimationFrame(tick)
+  }
+  onDestroy(() => cancelAnimationFrame(raf))
+
+  function toPx(x: number, y: number): [number, number] {
+    const r = match.map.radius
+    return [((x + r) / (2 * r)) * size, ((r - y) / (2 * r)) * size]
+  }
+
+  function draw() {
+    if (!canvas) return
+    const dpr = window.devicePixelRatio || 1
+    canvas.width = size * dpr
+    canvas.height = size * dpr
+    const ctx = canvas.getContext('2d')!
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    ctx.fillStyle = '#11141a'
+    ctx.fillRect(0, 0, size, size)
+    if (img) {
+      // The minimap art is very dark; lift it so the lanes read on the dark page.
+      ctx.filter = 'brightness(2.6) contrast(1.1)'
+      ctx.drawImage(img, 0, 0, size, size)
+      ctx.filter = 'none'
+    }
+    const i = Math.min(samples - 1, Math.floor(t / match.paths.interval_s))
+
+    if (showHeat && focusedPlayer) {
+      const path = match.paths.players[focusedPlayer.slot]
+      ctx.fillStyle = TEAM_COLOURS[focusedPlayer.team]
+      ctx.globalAlpha = 0.05
+      for (let j = 0; j <= i && j < path.x.length; j++) {
+        if (!path.health[j]) continue
+        const [px, py] = toPx(path.x[j], path.y[j])
+        ctx.beginPath(); ctx.arc(px, py, Math.max(4, size / 90), 0, Math.PI * 2); ctx.fill()
+      }
+      ctx.globalAlpha = 1
+    }
+
+    if (showDeaths) {
+      for (const d of deathsSoFar) {
+        const victim = bySlot.get(d.victim)
+        if (!victim) continue
+        const [vx, vy] = toPx(d.victim_pos[0], d.victim_pos[1])
+        const recent = t - d.t < KILL_FLASH_S
+        if (recent) {
+          const [kx, ky] = toPx(d.killer_pos[0], d.killer_pos[1])
+          ctx.strokeStyle = 'rgba(255,255,255,0.7)'
+          ctx.lineWidth = 1.5
+          ctx.setLineDash([4, 3])
+          ctx.beginPath(); ctx.moveTo(kx, ky); ctx.lineTo(vx, vy); ctx.stroke()
+          ctx.setLineDash([])
+        }
+        const s = recent ? 7 : 4
+        ctx.strokeStyle = TEAM_COLOURS[victim.team]
+        ctx.globalAlpha = recent ? 1 : 0.6
+        ctx.lineWidth = recent ? 3 : 2
+        ctx.beginPath(); ctx.moveTo(vx - s, vy - s); ctx.lineTo(vx + s, vy + s); ctx.moveTo(vx + s, vy - s); ctx.lineTo(vx - s, vy + s); ctx.stroke()
+        ctx.globalAlpha = 1
+      }
+    }
+
+    for (const p of match.players) {
+      const path = match.paths.players[p.slot]
+      if (!path || i >= path.x.length || !path.health[i]) continue
+      const colour = TEAM_COLOURS[p.team]
+      if (showTrails) {
+        ctx.strokeStyle = colour
+        ctx.lineWidth = 2
+        ctx.globalAlpha = 0.45
+        ctx.beginPath()
+        let started = false
+        for (let j = Math.max(0, i - TRAIL_S); j <= i; j++) {
+          if (!path.health[j]) { started = false; continue }
+          const [px, py] = toPx(path.x[j], path.y[j])
+          if (!started) { ctx.moveTo(px, py); started = true } else ctx.lineTo(px, py)
+        }
+        ctx.stroke()
+        ctx.globalAlpha = 1
+      }
+      const [px, py] = toPx(path.x[i], path.y[i])
+      const r = p.slot === focus ? 8 : 6
+      ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2)
+      ctx.fillStyle = colour; ctx.fill()
+      ctx.lineWidth = 2
+      ctx.strokeStyle = p.slot === focus ? '#ffffff' : p.member ? '#c3a8ff' : '#11141a'
+      ctx.stroke()
+      if (p.slot === focus || p.member) {
+        ctx.font = '600 11px "Public Sans", system-ui, sans-serif'
+        ctx.fillStyle = '#ffffff'
+        ctx.strokeStyle = '#11141a'
+        ctx.lineWidth = 3
+        const label = p.member?.name ?? p.hero.name
+        ctx.strokeText(label, px + r + 4, py + 4)
+        ctx.fillText(label, px + r + 4, py + 4)
+      }
+    }
+  }
+
+  $effect(() => {
+    // Redraw whenever anything the drawing reads changes.
+    void [t, size, img, focus, showTrails, showDeaths, showHeat]
+    draw()
+  })
+
+  function jump(to: number) { t = Math.max(0, Math.min(tmax, to)); playing = false }
+  const name = (p: Player | undefined) => p ? (p.member ? `${p.member.name} (${p.hero.name})` : p.hero.name) : 'World'
+</script>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Map replay</h2>
+    <PlayerPicker players={match.players} bind:focus />
+  </div>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="canvas-box" bind:this={box}>
+        <canvas bind:this={canvas} style:width="{size}px" style:height="{size}px" aria-label="Map of player positions at {mmss(t)}"></canvas>
+        {#if imgFailed}<p class="imgnote">Map image didn’t load, so positions are shown on a blank map.</p>{/if}
+      </div>
+      <div class="controls">
+        <button class="play" onclick={toggle} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : '▶'}</button>
+        <input type="range" id="map-time" min="0" max={tmax} step="1" bind:value={t} oninput={() => (playing = false)} aria-label="Match time" />
+        <span class="time num">{mmss(t)} / {mmss(tmax)}</span>
+        <label class="speed">Speed
+          <select id="map-speed" bind:value={speed}>
+            {#each [4, 8, 16, 32, 64] as s}<option value={s}>{s}×</option>{/each}
+          </select>
+        </label>
+      </div>
+      <div class="toggles">
+        <label><input id="map-trails" type="checkbox" bind:checked={showTrails} /> Trails</label>
+        <label><input id="map-deaths" type="checkbox" bind:checked={showDeaths} /> Deaths</label>
+        <label><input id="map-heat" type="checkbox" bind:checked={showHeat} /> Heatmap for {focusedPlayer?.hero.name ?? 'selected player'}</label>
+      </div>
+    </div>
+
+    <aside class="feed">
+      <h3 class="label">Kills so far · {deathsSoFar.length}</h3>
+      <ol>
+        {#each [...deathsSoFar].reverse() as d (d.t + ':' + d.victim)}
+          {@const killer = bySlot.get(d.killer)}
+          {@const victim = bySlot.get(d.victim)}
+          <li class:recent={t - d.t < KILL_FLASH_S}>
+            <button onclick={() => jump(d.t - 4)} title="Jump to 4 seconds before this kill">
+              <span class="ft num">{mmss(d.t)}</span>
+              {#if killer}<HeroIcon hero={killer.hero} team={killer.team} size={22} />{/if}
+              <span class="kn">{name(killer)}</span>
+              <span class="arrow">→</span>
+              {#if victim}<HeroIcon hero={victim.hero} team={victim.team} size={22} />{/if}
+              <span class="kn">{name(victim)}</span>
+            </button>
+          </li>
+        {:else}
+          <li class="empty">No kills yet. Press play or drag the slider.</li>
+        {/each}
+      </ol>
+    </aside>
+  </div>
+</section>
+
+<style>
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: 1.25rem; }
+  .stage { display: grid; gap: 0.75rem; align-content: start; min-width: 0; }
+  .canvas-box { width: 100%; max-width: 44rem; aspect-ratio: 1; position: relative; }
+  canvas { display: block; border-radius: 6px; }
+  .imgnote { position: absolute; left: 0.75rem; bottom: 0.75rem; font-size: 0.8rem; color: var(--muted); }
+  .controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; max-width: 44rem; }
+  .play { width: 2.4rem; height: 2.4rem; border-radius: 50%; border: 1px solid var(--line); background: var(--panel-2); cursor: pointer; font-size: 0.85rem; }
+  .play:hover { border-color: var(--faint); }
+  input[type='range'] { flex: 1; min-width: 10rem; accent-color: var(--fg); }
+  .time { color: var(--muted); font-size: 0.85rem; min-width: 6.5rem; }
+  .speed { font-size: 0.85rem; color: var(--muted); display: inline-flex; gap: 0.4rem; align-items: center; }
+  select { background: var(--panel-2); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 0.15rem 0.3rem; }
+  .toggles { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; font-size: 0.88rem; color: var(--muted); }
+  .toggles label { display: inline-flex; gap: 0.4rem; align-items: center; cursor: pointer; }
+  .feed { display: grid; gap: 0.5rem; align-content: start; min-width: 0; }
+  .feed ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 40rem; overflow-y: auto; }
+  .feed button { width: 100%; display: flex; align-items: center; gap: 0.4rem; background: none; border: 0; padding: 0.3rem 0.4rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; text-align: left; }
+  .feed button:hover { background: var(--panel-2); }
+  .recent button { background: var(--panel-2); }
+  .ft { color: var(--muted); min-width: 2.6rem; }
+  .kn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
+  .arrow { color: var(--faint); }
+  .empty { color: var(--muted); font-size: 0.85rem; padding: 0.4rem; }
+  @media (max-width: 60rem) { .layout { grid-template-columns: 1fr; } .feed ol { max-height: 18rem; } }
+</style>

@@ -23,8 +23,8 @@ jobs:
       - name: Run actionlint
         uses: raven-actions/actionlint@v2
 
-  javascript:
-    name: Validate JavaScript
+  check:
+    name: Type-check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -33,28 +33,31 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Check JavaScript syntax
-        run: node --check app.js
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run svelte-check and tsc
+        run: npm run check
 
-  static:
-    name: Check static site
+  build:
+    name: Build app
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Create local runtime configuration
-        run: cp config.example.js config.js
-      - name: Validate static references
-        run: python3 scripts/check_static.py
-      - name: Smoke test served assets
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Check build output
         run: |
-          python3 -m http.server 4173 > /tmp/singularity-web-http.log 2>&1 &
-          server_pid=$!
-          trap 'kill "$server_pid"' EXIT
-          sleep 1
-          for path in index.html styles.css app.js config.js; do
-            curl --fail --silent --show-error "http://127.0.0.1:4173/$path" > /dev/null
-          done
+          test -f dist/index.html
+          ls dist/assets/*.js dist/assets/*.css > /dev/null
 
   container:
     name: Build Nginx container
@@ -64,3 +67,19 @@ jobs:
         uses: actions/checkout@v4
       - name: Build container
         run: docker build --tag singularity-web:ci .
+      - name: Smoke test served routes
+        run: |
+          # nginx resolves the API upstream at startup, so point it at a local
+          # address; the API itself isn't needed to serve the app.
+          docker run --detach --name web -p 8081:80 \
+            -e SINGULARITY_API_UPSTREAM=http://127.0.0.1:9 singularity-web:ci
+          trap 'docker logs web; docker rm -f web' EXIT
+          for _ in $(seq 1 20); do
+            curl --silent --output /dev/null http://127.0.0.1:8081/ && break
+            sleep 0.5
+          done
+          curl --fail --silent --show-error http://127.0.0.1:8081/ | grep -q '<div id="app">'
+          # Client-side routes fall back to index.html.
+          curl --fail --silent --show-error \
+            http://127.0.0.1:8081/m/00000000-0000-0000-0000-000000000000 | grep -q '<div id="app">'
+          curl --silent --show-error --head http://127.0.0.1:8081/ | grep -qi '^content-security-policy:'

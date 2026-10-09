@@ -1,0 +1,26 @@
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # The read API lives on singularity-platform. Proxying it keeps the app and
+    # its data on one origin, so there is no CORS and no API URL in the browser.
+    location /api/ {
+        proxy_pass ${SINGULARITY_API_UPSTREAM};
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # Single-page app: /m/<uuid> and other routes are handled in the browser.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Hero, item and map images come from the public Deadlock assets CDN until
+    # they are mirrored locally.
+    add_header Content-Security-Policy "default-src 'self'; connect-src 'self'; style-src 'self'; font-src 'self'; script-src 'self'; img-src 'self' data: https://assets-bucket.deadlock-api.com; frame-ancestors 'none'; base-uri 'self'" always;
+    add_header Referrer-Policy "same-origin" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+}

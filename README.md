@@ -1,55 +1,69 @@
 # Singularity Web
 
-Private web UI for the Singularity Deadlock match tracker.
+The match web app for Singularity, the group's private Deadlock match tracker. Each
+match gets its own page at `/m/<uuid>` with a Leetify-style breakdown:
 
-The baseline is a dependency-free static dashboard so it can run on the small
-home server without a JavaScript build toolchain. It includes responsive
-overview, match archive, and player views with representative demo data.
+- **Overview:** scoreboard (K/D/A, KDR, KDA, souls, hero damage, healing, last hits,
+  accuracy) and the team souls lead over time
+- **Combat:** aim stats for each player against the lobby average (accuracy, hero crit
+  rate, damage per minute, damage taken, how kills happened) and damage broken down
+  by ability and by target
+- **Map:** a replay of every player's position with trails, kill markers, a heatmap for
+  the selected player and a kill feed. `?t=<seconds>` opens it at a moment.
+- **Builds:** items in the order bought and when each ability was unlocked and upgraded
 
-## Run locally
+Clicking a player anywhere selects them across all tabs.
+
+## Run it
 
 ```bash
-python3 -m http.server 4173
-open http://127.0.0.1:4173
+npm install
+npm run dev          # http://localhost:5173, using the sample data in fixtures/
+npm run check        # type-check
 ```
 
-The dashboard works without a backend by using demo data. To point it at a
-running platform API:
+To use a real platform instead of the fixtures:
 
 ```bash
-cp config.example.js config.js
+SINGULARITY_API=http://192.168.1.110:8080 npm run dev
 ```
 
-Then set `apiBaseUrl` in `config.js`:
+## Data
 
-```js
-window.SINGULARITY_CONFIG = {
-  apiBaseUrl: "http://singularity-server:8080",
-};
+The app reads `GET /api/matches` and `GET /api/matches/{uuid}` from the same origin.
+[`API.md`](API.md) is the contract for singularity-platform, and `src/lib/types.ts`
+has the exact field names.
+
+Until the platform serves those endpoints, `fixtures/api/` holds two sample matches
+built from public match data by `scripts/make_fixtures.py`. Account IDs in the
+fixtures are made up, and two players are labelled as group members so the
+highlighting has something to show.
+
+```bash
+python3 scripts/make_fixtures.py [match_id ...]   # regenerate the fixtures
 ```
-
-The UI will request `GET /api/dashboard`. Until that endpoint is implemented
-by the platform, it falls back to demo data and still displays the platform
-connection state.
 
 ## Container
 
+The Docker image builds the app and serves it with nginx, so the server only needs
+Docker. nginx also forwards `/api/` to singularity-platform, which keeps the app and
+its data on one address.
+
 ```bash
 docker build -t singularity-web .
-docker run --rm -p 8088:80 singularity-web
-```
-
-For a deployment-specific API URL, mount a generated `config.js` over the
-image's default file:
-
-```bash
 docker run --rm -p 8088:80 \
-  -v "$PWD/config.js:/usr/share/nginx/html/config.js:ro" \
+  -e SINGULARITY_API_UPSTREAM=http://192.168.1.110:8080 \
   singularity-web
 ```
 
+`SINGULARITY_API_UPSTREAM` defaults to `http://platform:8080`, the platform's name
+inside the deployment's Compose network.
+
+Hero, item and map images currently load from the public Deadlock assets CDN.
+
 ## Repository docs
 
-- [`SPEC.md`](SPEC.md) — UI scope and API contract
-- [`SECURITY.md`](SECURITY.md) — browser and deployment security
-- [`OPERATIONS.md`](OPERATIONS.md) — serving and troubleshooting
+- [`API.md`](API.md): the read API the app expects from the platform
+- [`SPEC.md`](SPEC.md): UI scope and requirements
+- [`SECURITY.md`](SECURITY.md): browser and deployment security
+- [`OPERATIONS.md`](OPERATIONS.md): serving and troubleshooting

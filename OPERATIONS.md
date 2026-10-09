@@ -1,39 +1,44 @@
 # Web Operations
 
-## Static server
-
-For a quick local preview:
+## Development server
 
 ```bash
-python3 -m http.server 4173
+npm install
+npm run dev
 ```
 
-For the server deployment, prefer the included Nginx container:
+This serves the sample matches in `fixtures/api/`. To use a running platform
+instead, set `SINGULARITY_API=http://<platform-host>:8080` before `npm run dev`.
+
+## Server deployment
+
+Use the included container. It builds the app and serves it with nginx:
 
 ```bash
 docker build -t singularity-web .
 docker run -d --name singularity-web --restart unless-stopped \
   -p 8088:80 \
-  -v "$PWD/config.js:/usr/share/nginx/html/config.js:ro" \
+  -e SINGULARITY_API_UPSTREAM=http://platform:8080 \
   singularity-web
 ```
 
 ## Configuration
 
-Create `config.js` from `config.example.js`. The file contains only the
-browser-visible API base URL and should point to the private, read-only API
-origin, not the salt ingestion route.
+`SINGULARITY_API_UPSTREAM` is the only setting. It is the address nginx forwards
+`/api/` requests to, and must point at the platform's read API, not the salt
+ingestion route. It never reaches the browser.
 
 ## Troubleshooting
 
-- **Demo data is shown:** check the browser network panel and confirm
-  `GET /api/dashboard` is reachable from the browser's network.
-- **CORS errors:** serve the UI through the same private origin as the API or
-  configure the platform/reverse proxy for the UI origin.
-- **Stale configuration:** `config.js` is served with `Cache-Control: no-store`;
-  reload the page after replacing it.
+- **"Couldn't load matches":** check `docker logs singularity-web` for upstream
+  errors and confirm the platform answers `GET /api/matches` from inside the
+  container's network.
+- **A match link says the match isn't on the server:** the UUID doesn't exist yet,
+  or the match hasn't finished processing.
+- **Images missing:** hero, item and map images load from
+  `assets-bucket.deadlock-api.com`. The browser needs internet access for them.
 
 ## Resource expectations
 
-The static UI has no worker process or database. Nginx memory and CPU usage
-should be negligible compared with ClickHouse and future parser workers.
+The container is nginx serving about 300 KB of static files. Memory and CPU use
+are negligible next to ClickHouse and the parser workers.

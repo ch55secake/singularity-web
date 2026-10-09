@@ -1,6 +1,9 @@
 <script lang="ts">
   import { route } from './lib/router.svelte'
   import MatchList from './pages/MatchList.svelte'
+  import MatchPage from './pages/MatchPage.svelte'
+
+  const matchUuid = $derived(route.path.match(/^\/m\/([0-9a-f-]{36})\/?$/i)?.[1])
 </script>
 
 <header class="site">
@@ -16,6 +19,8 @@
 <main>
   {#if route.path === '/'}
     <MatchList />
+  {:else if matchUuid}
+    {#key matchUuid}<MatchPage uuid={matchUuid} />{/key}
   {:else}
     <section class="panel missing">
       <h1>Page not found</h1>

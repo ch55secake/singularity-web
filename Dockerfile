@@ -13,5 +13,7 @@ FROM nginx:1.27-alpine
 # The nginx image runs envsubst on templates at startup, filling in the API upstream.
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html
+# Sample data, served only when SINGULARITY_API_UPSTREAM points at the demo server.
+COPY fixtures/api /usr/share/nginx/fixtures/api
 ENV SINGULARITY_API_UPSTREAM=http://platform:8080
 EXPOSE 80

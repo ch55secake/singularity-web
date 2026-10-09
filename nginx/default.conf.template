@@ -24,3 +24,22 @@ server {
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-Frame-Options "DENY" always;
 }
+
+# Sample matches from fixtures/api, for previewing the app before the platform
+# serves the read API (platform issue #9). Only reachable from inside the
+# container. Use it with SINGULARITY_API_UPSTREAM=http://127.0.0.1:8090.
+server {
+    listen 127.0.0.1:8090;
+    root /usr/share/nginx/fixtures;
+    default_type application/json;
+
+    location = /api/matches {
+        try_files /api/matches.json =404;
+    }
+    location ~ ^/api/matches/([0-9a-f-]+)$ {
+        try_files /api/matches/$1.json =404;
+    }
+    location / {
+        return 404;
+    }
+}

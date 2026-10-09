@@ -28,6 +28,10 @@ docker run -d --name singularity-web --restart unless-stopped \
 `/api/` requests to, and must point at the platform's read API, not the salt
 ingestion route. It never reaches the browser.
 
+To preview the app before the platform serves the read API, set it to
+`http://127.0.0.1:8090`. nginx then answers `/api/` from the two sample matches
+in `fixtures/api/` instead of forwarding to the platform.
+
 ## Troubleshooting
 
 - **"Couldn't load matches":** check `docker logs singularity-web` for upstream

@@ -4,6 +4,8 @@
   import { route, setHash } from '../lib/router.svelte'
   import Scoreboard from '../components/Scoreboard.svelte'
   import SoulsAdvantage from '../components/SoulsAdvantage.svelte'
+  import AimTable from '../components/AimTable.svelte'
+  import DamageBreakdown from '../components/DamageBreakdown.svelte'
   import PlayerPicker from '../components/PlayerPicker.svelte'
   import type { MatchDetail } from '../lib/types'
 
@@ -11,6 +13,7 @@
 
   const TABS = [
     { id: 'overview', label: 'Overview' },
+    { id: 'combat', label: 'Combat' },
   ]
   const tab = $derived(TABS.some((t) => t.id === route.hash) ? route.hash : 'overview')
 
@@ -76,6 +79,12 @@
     {#if tab === 'overview'}
       <Scoreboard {match} bind:focus />
       <SoulsAdvantage {match} />
+    {:else if tab === 'combat'}
+      <AimTable {match} bind:focus />
+      <section class="panel">
+        <div class="panel-head"><h2>Damage breakdown</h2><PlayerPicker players={match.players} bind:focus /></div>
+        <DamageBreakdown {match} {focus} />
+      </section>
     {/if}
   </div>
 {/if}

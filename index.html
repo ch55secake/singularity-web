@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b1020" />
+    <meta name="description" content="Singularity — private Deadlock match intelligence for friends." />
+    <title>Singularity · Deadlock intelligence</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="config.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Primary navigation">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">✦</div>
+          <div>
+            <span class="eyebrow">private tracker</span>
+            <strong>Singularity</strong>
+          </div>
+        </div>
+
+        <nav class="nav-list">
+          <button class="nav-item is-active" data-view="overview" type="button"><span class="nav-icon">◈</span>Overview</button>
+          <button class="nav-item" data-view="matches" type="button"><span class="nav-icon">⌁</span>Matches</button>
+          <button class="nav-item" data-view="players" type="button"><span class="nav-icon">◎</span>Players</button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="connection-card">
+            <span class="status-dot" data-role="status-dot"></span>
+            <div>
+              <span class="eyebrow">platform status</span>
+              <strong data-role="connection-status">Demo data</strong>
+            </div>
+          </div>
+          <span class="version-label">baseline v0.1.0</span>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div>
+            <span class="eyebrow">deadlock / friends group</span>
+            <h1 data-role="page-title">Overview</h1>
+          </div>
+          <div class="topbar-actions">
+            <span class="last-updated" data-role="last-updated">Updated just now</span>
+            <button class="icon-button" data-action="refresh" type="button" aria-label="Refresh dashboard">↻</button>
+          </div>
+        </header>
+
+        <section class="view-panel is-visible" data-panel="overview">
+          <div class="hero-card">
+            <div class="hero-copy">
+              <span class="pill pill-accent">match intelligence</span>
+              <h2>See the shape<br /><em>of every game.</em></h2>
+              <p>A private view of your group's Deadlock sessions, trends, and standout performances.</p>
+              <button class="text-button" data-view-link="matches" type="button">Explore matches <span>→</span></button>
+            </div>
+            <div class="hero-orbit" aria-hidden="true">
+              <div class="orbit orbit-one"></div>
+              <div class="orbit orbit-two"></div>
+              <div class="orbit-core">✦</div>
+              <span class="orbit-label orbit-label-one">WIN RATE</span>
+              <span class="orbit-label orbit-label-two">MOMENTUM</span>
+            </div>
+          </div>
+
+          <div class="metric-grid" data-role="metrics"></div>
+
+          <div class="section-heading">
+            <div><span class="eyebrow">recent activity</span><h2>Latest matches</h2></div>
+            <button class="quiet-button" data-view-link="matches" type="button">View all <span>→</span></button>
+          </div>
+          <div class="match-grid" data-role="recent-matches"></div>
+
+          <div class="section-heading section-heading-spaced">
+            <div><span class="eyebrow">group performance</span><h2>Players in form</h2></div>
+            <button class="quiet-button" data-view-link="players" type="button">View players <span>→</span></button>
+          </div>
+          <div class="players-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Player</th><th>Games</th><th>Win rate</th><th>Avg. KDA</th><th>Trend</th></tr></thead>
+              <tbody data-role="top-players"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view-panel" data-panel="matches" hidden>
+          <div class="page-intro">
+            <div><span class="eyebrow">match archive</span><h2>Every session, indexed.</h2></div>
+            <div class="filter-group" role="group" aria-label="Match filters">
+              <button class="filter-button is-active" data-filter="all" type="button">All matches</button>
+              <button class="filter-button" data-filter="win" type="button">Wins</button>
+              <button class="filter-button" data-filter="loss" type="button">Losses</button>
+            </div>
+          </div>
+          <div class="matches-list" data-role="all-matches"></div>
+        </section>
+
+        <section class="view-panel" data-panel="players" hidden>
+          <div class="page-intro">
+            <div><span class="eyebrow">the squad</span><h2>Know your tendencies.</h2></div>
+            <span class="pill">last 30 days</span>
+          </div>
+          <div class="players-table-wrap players-page-table">
+            <table class="data-table">
+              <thead><tr><th>Player</th><th>Games</th><th>Win rate</th><th>Avg. KDA</th><th>Best hero</th><th>Trend</th></tr></thead>
+              <tbody data-role="all-players"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <footer class="page-footer">
+          <span>Singularity is private by design.</span>
+          <span>Data collected from consenting local clients.</span>
+        </footer>
+      </main>
+    </div>
+    <div class="toast" data-role="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+    groups:
+      all-actions:
+        patterns:
+          - "*"
+    rebase-strategy: auto
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: daily
+    rebase-strategy: auto

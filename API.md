@@ -1,8 +1,8 @@
 # Read API contract
 
-The web app reads match data from two endpoints. singularity-platform should serve
-them under the same origin as the app (platform issue #9). Until then, `npm run dev`
-serves the sample responses in `fixtures/api/`.
+The web app reads match data from three endpoints. singularity-platform should serve
+them under the same origin as the app (platform issues #9 and #10). Until then,
+`npm run dev` serves the sample responses in `fixtures/api/`.
 
 The TypeScript types in `src/lib/types.ts` are the source of truth for field names.
 
@@ -26,6 +26,34 @@ Newest first. Array of match summaries:
 
 `member` is set when the account belongs to someone in the group, otherwise `null`.
 Steam account IDs are deliberately not part of the browser API (see SECURITY.md).
+
+## `GET /api/players/by-name/{name}`
+
+The configured group member's aggregate form and recent matches. The name is a
+display-name path segment, not a Steam account ID, and unknown names return `404`:
+
+```jsonc
+{
+  "name": "cheesecake",
+  "matches": 12,
+  "kdr": 1.34,
+  "kda": 2.41,
+  "accuracy": 0.61,
+  "crit_rate": 0.13,
+  "win_rate": 0.58,
+  "heroes": [{ "id": 72, "name": "Billy", "matches": 7 }],
+  "recent": [{
+    "uuid": "37bb05cc-27d5-5ae8-8c28-129dd11cd85c",
+    "match_id": 111839173,
+    "start_time": 1791289512,
+    "duration_s": 1910,
+    "winning_team": 0,
+    "team": 0,
+    "hero": { "id": 72, "name": "Billy", "icon": "...", "card": "..." },
+    "kills": 8, "deaths": 10, "assists": 9
+  }]
+}
+```
 
 ## `GET /api/matches/{uuid}`
 

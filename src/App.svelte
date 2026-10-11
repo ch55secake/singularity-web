@@ -1,9 +1,12 @@
 <script lang="ts">
-  import { route } from './lib/router.svelte'
-  import MatchList from './pages/MatchList.svelte'
-  import MatchPage from './pages/MatchPage.svelte'
+import { route } from './lib/router.svelte'
+import MatchList from './pages/MatchList.svelte'
+import MatchPage from './pages/MatchPage.svelte'
+import PlayerPage from './pages/PlayerPage.svelte'
 
-  const matchUuid = $derived(route.path.match(/^\/m\/([0-9a-f-]{36})\/?$/i)?.[1])
+const matchUuid = $derived(route.path.match(/^\/m\/([0-9a-f-]{36})\/?$/i)?.[1])
+const playerPath = $derived(route.path.match(/^\/p\/([^/]+)\/?$/)?.[1])
+const playerName = $derived(playerPath ? decodeURIComponent(playerPath) : null)
 </script>
 
 <header class="site">
@@ -12,7 +15,10 @@
       <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="var(--amber)" stroke-width="3"/><circle cx="16" cy="16" r="3.5" fill="var(--sapphire)"/></svg>
       Singularity
     </a>
-    <nav><a href="/" aria-current={route.path === '/' ? 'page' : undefined}>Matches</a></nav>
+    <nav>
+      <a href="/" aria-current={route.path === '/' ? 'page' : undefined}>Matches</a>
+      {#if playerName}<a href="/p/{encodeURIComponent(playerName)}" aria-current="page">{playerName}</a>{/if}
+    </nav>
   </div>
 </header>
 
@@ -21,6 +27,8 @@
     <MatchList />
   {:else if matchUuid}
     {#key matchUuid}<MatchPage uuid={matchUuid} />{/key}
+  {:else if playerName}
+    {#key playerName}<PlayerPage name={playerName} />{/key}
   {:else}
     <section class="panel missing">
       <h1>Page not found</h1>

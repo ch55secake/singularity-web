@@ -1,0 +1,27 @@
+{
+  "name": "cheesecake",
+  "matches": 1,
+  "kdr": 0.8,
+  "kda": 1.7,
+  "accuracy": 0.531,
+  "crit_rate": 0.115,
+  "win_rate": 1,
+  "heroes": [{ "id": 72, "name": "Billy", "matches": 1 }],
+  "recent": [{
+    "uuid": "37bb05cc-27d5-5ae8-8c28-129dd11cd85c",
+    "match_id": 111839173,
+    "start_time": 1791289512,
+    "duration_s": 1910,
+    "winning_team": 0,
+    "team": 0,
+    "hero": {
+      "id": 72,
+      "name": "Billy",
+      "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/punkgoat_sm.webp",
+      "card": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/punkgoat_card.webp"
+    },
+    "kills": 8,
+    "deaths": 10,
+    "assists": 9
+  }]
+}

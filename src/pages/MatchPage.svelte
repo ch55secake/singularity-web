@@ -65,6 +65,9 @@
         <div class="facts num">
           <span>{match.mode}</span><span>{mmss(match.duration_s)}</span><span>{when(match.start_time)}</span>
         </div>
+        {#if match.average_badge.some((badge) => badge !== null && badge > 0)}
+          <span class="sub num">Average badge {Math.round(match.average_badge.filter((badge): badge is number => badge !== null && badge > 0).reduce((sum, badge) => sum + badge, 0) / match.average_badge.filter((badge): badge is number => badge !== null && badge > 0).length)}</span>
+        {/if}
         <span class="sub num">Match {match.match_id}</span>
       </div>
       <div class="side right team-1" class:won={match.winning_team === 1}>

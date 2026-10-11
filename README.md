@@ -13,6 +13,8 @@ match gets its own page at `/m/<uuid>` with a Leetify-style breakdown:
 - **Builds:** items in the order bought and when each ability was unlocked and upgraded
 
 Clicking a player anywhere selects them across all tabs.
+The match list can be filtered by group member and links to each member's player
+page, which shows aggregate form, favourite heroes, and recent matches.
 
 ## Run it
 
@@ -30,7 +32,8 @@ SINGULARITY_API=http://192.168.1.110:8080 npm run dev
 
 ## Data
 
-The app reads `GET /api/matches` and `GET /api/matches/{uuid}` from the same origin.
+The app reads `GET /api/matches`, `GET /api/matches/{uuid}`, and
+`GET /api/players/by-name/{name}` from the same origin.
 [`API.md`](API.md) is the contract for singularity-platform, and `src/lib/types.ts`
 has the exact field names.
 

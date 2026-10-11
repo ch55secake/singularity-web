@@ -5,8 +5,10 @@
   import type { MatchSummary } from '../lib/types'
 
   const load = listMatches()
+  let selected = $state('')
 
   const members = (m: MatchSummary) => m.players.filter((p) => p.member)
+  const includesPlayer = (m: MatchSummary) => !selected || m.players.some((p) => p.member?.name === selected)
 </script>
 
 <svelte:head><title>Matches · Singularity</title></svelte:head>
@@ -20,14 +22,35 @@
   {#await load}
     <p class="state">Loading matches…</p>
   {:then matches}
+    {@const memberNames = [...new Set(matches.flatMap((m) => m.players.flatMap((p) => p.member ? [p.member.name] : [])))].sort()}
+    <section class="toolbar panel">
+      <label for="player-filter">Show matches with</label>
+      <select id="player-filter" bind:value={selected}>
+        <option value="">Everyone</option>
+        {#each memberNames as name}<option value={name}>{name}</option>{/each}
+      </select>
+      <span class="sub">{matches.filter(includesPlayer).length} of {matches.length} matches</span>
+      {#if memberNames.length}
+        <nav class="players" aria-label="Player pages">
+          <span class="label">Player pages</span>
+          {#each memberNames as name}<a href="/p/{encodeURIComponent(name)}">{name}</a>{/each}
+        </nav>
+      {/if}
+    </section>
+
     {#if matches.length === 0}
       <section class="panel state">
         <h2>No matches yet</h2>
         <p>Matches appear here a few minutes after someone in the group finishes a game with the ingest app running.</p>
       </section>
+    {:else if matches.filter(includesPlayer).length === 0}
+      <section class="panel state">
+        <h2>No matches for {selected}</h2>
+        <p>Choose everyone or another group member to see more matches.</p>
+      </section>
     {:else}
       <ol class="list">
-        {#each matches as m (m.uuid)}
+        {#each matches.filter(includesPlayer) as m (m.uuid)}
           {@const ours = members(m)}
           <li>
             <a class="row panel" href="/m/{m.uuid}">
@@ -78,6 +101,12 @@
   .intro p, .sub { color: var(--muted); }
   .state { display: grid; gap: 0.4rem; color: var(--muted); }
   .state h2 { color: var(--fg); font-size: 1.1rem; }
+  .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 0.65rem 0.9rem; }
+  .toolbar label { color: var(--muted); font-size: 0.88rem; }
+  select { color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 0.35rem 0.5rem; }
+  .players { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0.35rem 0.7rem; margin-left: auto; }
+  .players a { color: var(--member); font-weight: 600; text-decoration: none; }
+  .players a:hover { text-decoration: underline; }
   .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
   .row {
     display: grid; grid-template-columns: 7rem minmax(0, 1.3fr) minmax(0, 1fr); gap: 1rem 1.5rem; align-items: center;

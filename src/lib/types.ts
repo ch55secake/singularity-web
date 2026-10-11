@@ -98,3 +98,34 @@ export interface MatchDetail {
   paths: { interval_s: number; players: Record<string, Path> };
   map: { radius: number; image: string };
 }
+
+export interface PlayerHeroAverage {
+  id: number;
+  name: string;
+  matches: number;
+}
+
+export interface RecentPlayerMatch {
+  uuid: string;
+  match_id: number;
+  start_time: number;
+  duration_s: number;
+  winning_team: Team;
+  team: Team;
+  hero: Hero;
+  kills: number;
+  deaths: number;
+  assists: number;
+}
+
+export interface PlayerAverage {
+  name: string;
+  matches: number;
+  kdr: number;
+  kda: number;
+  accuracy: number;
+  crit_rate: number;
+  win_rate: number;
+  heroes: PlayerHeroAverage[];
+  recent: RecentPlayerMatch[];
+}

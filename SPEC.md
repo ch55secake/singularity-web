@@ -1,6 +1,6 @@
 # Singularity Web Specification
 
-Status: v0.2.0, match pages on sample data
+Status: v0.3.0, match and player pages on sample data
 
 ## Objective
 
@@ -10,7 +10,7 @@ Singularity platform, with a Leetify-style page for every match.
 ## Views
 
 - **Matches** (`/`): every match, newest first, with the group's players picked out
-  (result, hero, K/D/A, KDR).
+  (result, hero, K/D/A, KDR), a group-member filter, and links to player pages.
 - **Match** (`/m/<uuid>`): one page per match. The UUID is a random public id, so
   links can be shared in Discord without exposing or letting anyone guess other
   matches. Four tabs:
@@ -24,16 +24,16 @@ Singularity platform, with a Leetify-style page for every match.
 
 Selecting a player on any tab follows them across all tabs.
 
-Planned: group overview (totals, win rate, players in form) and a page per player,
-both carried over from the v0.1.0 dashboard baseline once the platform has
-multi-match data.
+- **Player** (`/p/<name>`): aggregate KDR, KDA, accuracy, crit rate, win rate,
+  favourite heroes, and recent form for one configured group member.
 
 The app is read-only. Authentication, permissions and mutating actions belong at
 the platform or private reverse-proxy boundary.
 
 ## API
 
-The app reads `GET /api/matches` and `GET /api/matches/{uuid}` from its own origin.
+The app reads `GET /api/matches`, `GET /api/matches/{uuid}`, and
+`GET /api/players/by-name/{name}` from its own origin.
 [`API.md`](API.md) is the contract and `src/lib/types.ts` has the field names. In
 development, `fixtures/api/` stands in for the platform.
 

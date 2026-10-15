@@ -24,9 +24,14 @@ docker run -d --name singularity-web --restart unless-stopped \
 
 ## Configuration
 
-`SINGULARITY_API_UPSTREAM` is the only setting. It is the address nginx forwards
-`/api/` requests to, and must point at the platform's read API, not the salt
-ingestion route. It never reaches the browser.
+`SINGULARITY_API_UPSTREAM` is the address nginx forwards `/api/` requests to. It
+must point at the platform's read API, not the salt ingestion route.
+
+`SINGULARITY_API_TOKEN` is the platform's `SINGULARITY_READ_TOKEN`, if it has one.
+nginx sends it as a bearer token on every `/api/` request. Leave it empty when the
+platform has no read token.
+
+Neither setting reaches the browser.
 
 ## Troubleshooting
 

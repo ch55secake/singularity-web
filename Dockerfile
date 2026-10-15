@@ -14,4 +14,6 @@ FROM nginx:1.27-alpine
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html
 ENV SINGULARITY_API_UPSTREAM=http://platform:8080
+# Read token for the platform API, if it requires one. Set at runtime.
+ENV SINGULARITY_API_TOKEN=
 EXPOSE 80

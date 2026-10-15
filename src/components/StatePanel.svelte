@@ -34,7 +34,7 @@
   .error .state-icon { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 35%, var(--line)); background: color-mix(in srgb, var(--bad) 8%, transparent); }
   .missing .state-icon { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 35%, var(--line)); background: color-mix(in srgb, var(--amber) 8%, transparent); }
   .copy { display: grid; gap: 0.2rem; }
-  h2 { font-family: var(--display); font-size: 1.3rem; letter-spacing: 0.02em; text-transform: uppercase; }
+  h2 { font-family: var(--display); font-size: 1.05rem; font-weight: 600; letter-spacing: -0.015em; }
   p { color: var(--muted); }
   .action { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: 2.35rem; padding: 0.45rem 0.75rem; border: 1px solid var(--line); border-radius: 7px; background: var(--panel-2); color: var(--fg); font-weight: 600; font-size: 0.82rem; text-decoration: none; cursor: pointer; transition: border-color var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out); }
   .action:hover { border-color: var(--faint); transform: translateY(-1px); }

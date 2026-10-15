@@ -189,18 +189,18 @@
   .member-filter { display: grid; gap: 0.25rem; margin: 0; padding: 0; border: 0; }
   .member-filter legend { padding: 0; }
   .member-filter details { position: relative; }
-  .member-filter summary { min-height: 2.35rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; color: var(--fg); background: linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 84%, white), var(--panel-2)); border: 1px solid var(--line); border-radius: 7px; padding: 0.45rem 0.65rem; cursor: pointer; list-style: none; box-shadow: 0 1px 0 rgb(255 255 255 / 0.035) inset; transition: border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease; }
+  .member-filter summary { min-height: 2.35rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 7px; padding: 0.45rem 0.65rem; cursor: pointer; list-style: none; transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease; }
   .member-filter summary::-webkit-details-marker { display: none; }
   .member-filter summary::after { content: ''; width: 0.42rem; height: 0.42rem; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg) translateY(-2px); transition: transform var(--duration-fast) var(--ease-out); }
   .member-filter details[open] summary::after { transform: rotate(225deg) translate(-1px, -1px); }
-  .member-filter summary:hover { border-color: var(--faint); box-shadow: 0 1px 0 rgb(255 255 255 / 0.05) inset, 0 0 0 3px rgb(255 255 255 / 0.02); }
+  .member-filter summary:hover { border-color: var(--faint); background: color-mix(in srgb, var(--panel-2) 94%, white); }
   .member-options { position: absolute; z-index: 2; top: calc(100% + 0.25rem); left: 0; display: grid; gap: 0.35rem; min-width: 14rem; max-height: 16rem; overflow: auto; padding: 0.6rem; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 0.5rem 1.5rem #0008; }
   .member-options label { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.4rem; border-radius: 5px; color: var(--fg); cursor: pointer; transition: background var(--duration-fast) ease; }
   .member-options label:hover { background: rgb(255 255 255 / 0.045); }
   .member-options input { accent-color: var(--member); }
   .filter-hint { padding: 0.1rem 0.4rem 0.3rem; color: var(--faint); font-size: 0.68rem; font-weight: 500; }
   .filter-control { display: grid; gap: 0.25rem; }
-  select, input[type='date'] { min-height: 2.35rem; color: var(--fg); background: linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 84%, white), var(--panel-2)); border: 1px solid var(--line); border-radius: 7px; padding: 0.4rem 0.65rem; box-shadow: 0 1px 0 rgb(255 255 255 / 0.035) inset; transition: border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease; }
+  select, input[type='date'] { min-height: 2.35rem; color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 7px; padding: 0.4rem 0.65rem; transition: border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease; }
   select:hover, input[type='date']:hover { border-color: var(--faint); }
   select:focus, input[type='date']:focus { border-color: color-mix(in srgb, var(--sapphire) 70%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--sapphire) 13%, transparent); }
   .clear { min-height: 2.35rem; align-self: end; padding: 0.4rem 0.7rem; border: 1px solid color-mix(in srgb, var(--member) 28%, var(--line)); border-radius: 7px; background: color-mix(in srgb, var(--member) 7%, transparent); color: var(--member); cursor: pointer; transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out); }
@@ -215,7 +215,7 @@
     display: grid; grid-template-columns: 7rem minmax(0, 1.3fr) minmax(0, 1fr); gap: 1rem 1.5rem; align-items: center;
     text-decoration: none; transform: translateY(0); transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease, box-shadow var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out);
   }
-  .row:hover, .row:focus-visible { border-color: color-mix(in srgb, var(--sapphire) 38%, var(--faint)); background: linear-gradient(145deg, color-mix(in srgb, var(--panel-2) 90%, var(--sapphire)), var(--panel-2)); box-shadow: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 20px 48px rgb(0 0 0 / 0.3); transform: translateY(-2px); }
+  .row:hover, .row:focus-visible { border-color: #3a3b42; background: var(--panel-2); box-shadow: none; transform: translateY(-1px); }
   .row:active { transform: translateY(0) scale(0.997); }
   .row :global(.icon) { transition: transform var(--duration-fast) var(--ease-out), filter var(--duration-fast) ease; }
   .row:hover :global(.icon), .row:focus-visible :global(.icon) { transform: translateY(-1px); filter: saturate(1.12) brightness(1.05); }

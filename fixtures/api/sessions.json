@@ -1,0 +1,24 @@
+[
+  {
+    "start_time": 1791289512,
+    "end_time": 1791291422,
+    "duration_s": 1910,
+    "matches": [
+      {
+        "uuid": "37bb05cc-27d5-5ae8-8c28-129dd11cd85c",
+        "match_id": 111839173,
+        "start_time": 1791289512,
+        "duration_s": 1910,
+        "result": "win",
+        "members": ["cheesecake", "max"],
+        "impact_score": -0.24
+      }
+    ],
+    "members": ["cheesecake", "max"],
+    "wins": 1,
+    "losses": 0,
+    "splits": 0,
+    "win_rate": 1,
+    "impact_score": -0.24
+  }
+]

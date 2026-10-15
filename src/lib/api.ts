@@ -1,4 +1,4 @@
-import type { MatchDetail, MatchSummary, PlayerAverage } from './types'
+import type { MatchDetail, MatchSession, MatchSummary, PlayerAverage } from './types'
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(path, { headers: { Accept: 'application/json' } })
@@ -8,5 +8,6 @@ async function get<T>(path: string): Promise<T> {
 }
 
 export const listMatches = () => get<MatchSummary[]>('/api/matches')
+export const listSessions = () => get<MatchSession[]>('/api/sessions')
 export const getMatch = (uuid: string) => get<MatchDetail>(`/api/matches/${encodeURIComponent(uuid)}`)
 export const getPlayer = (name: string) => get<PlayerAverage>(`/api/players/by-name/${encodeURIComponent(name)}`)

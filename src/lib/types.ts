@@ -23,6 +23,14 @@ export interface PlayerSummary {
   assists: number;
 }
 
+export interface ImpactScore {
+  score: number;
+  combat: number;
+  economy: number;
+  utility: number;
+  survival: number;
+}
+
 export interface MatchSummary {
   uuid: string;
   match_id: number;
@@ -62,6 +70,7 @@ export interface Player extends PlayerSummary {
   healing: number;
   damage_taken: number;
   damage_mitigated: number;
+  impact: ImpactScore;
   aim: { shots_hit: number; shots_missed: number; hero_hits: number; hero_crits: number };
   kill_types: { bullet: number; ability: number; melee: number; headshot: number };
   timeline: { t: number[]; souls: number[]; hero_damage: number[] };
@@ -92,6 +101,7 @@ export interface MatchDetail {
   duration_s: number;
   mode: string;
   winning_team: Team;
+  impact_score_version: number;
   average_badge: [number | null, number | null];
   players: Player[];
   deaths: Death[];
@@ -117,6 +127,7 @@ export interface RecentPlayerMatch {
   kills: number;
   deaths: number;
   assists: number;
+  impact_score: number;
 }
 
 export interface PlayerAverage {
@@ -128,6 +139,9 @@ export interface PlayerAverage {
   crit_rate: number;
   win_rate: number;
   damage_per_minute: number;
+  average_impact_score: number;
+  impact_score_matches: number;
+  impact_score_version: number;
   heroes: PlayerHeroAverage[];
   recent: RecentPlayerMatch[];
 }

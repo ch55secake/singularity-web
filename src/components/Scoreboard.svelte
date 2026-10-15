@@ -77,10 +77,9 @@
 <style>
   .hint { font-size: 0.82rem; color: var(--muted); }
   .best-key { font-weight: 700; color: var(--fg); }
-  .data-scroll { border: 0; border-radius: 0; }
   table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.9rem; min-width: 52rem; }
   th, td { padding: 0.45rem 0.55rem; text-align: right; white-space: nowrap; }
-  thead th { position: sticky; top: 0; z-index: 3; background: var(--panel); box-shadow: 0 1px 0 var(--line); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  thead th { position: sticky; top: 0; z-index: 3; background: var(--panel); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
   .who { position: sticky; left: 0; z-index: 2; min-width: 10.5rem; text-align: left; background: var(--panel); box-shadow: 1px 0 0 var(--line); }
   thead .who { z-index: 4; }
   .team-row th { position: sticky; left: 0; z-index: 2; text-align: left; padding-top: 1rem; background: var(--panel); box-shadow: 0 1px 0 var(--line); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; color: var(--team); text-transform: uppercase; }

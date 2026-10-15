@@ -87,6 +87,15 @@ export interface Death {
   time_to_kill_s: number;
 }
 
+export interface ObjectiveEvent {
+  t: number;
+  /** Owning team for structures; claiming team for the mid-boss. */
+  team: Team;
+  kind: 'guardian' | 'walker' | 'shrine' | 'base_guardian' | 'patron' | 'patron_core' | 'mid_boss';
+  /** World coordinates; null when the current map assets do not locate this objective. */
+  position: [number, number] | null;
+}
+
 export interface Path {
   x: number[];
   y: number[];
@@ -105,6 +114,7 @@ export interface MatchDetail {
   average_badge: [number | null, number | null];
   players: Player[];
   deaths: Death[];
+  objectives: ObjectiveEvent[];
   paths: { interval_s: number; players: Record<string, Path> };
   map: { radius: number; image: string };
 }

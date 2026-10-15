@@ -3,6 +3,7 @@
   import { TEAMS, ago, mmss, ratio, when } from '../lib/format'
   import HeroIcon from '../components/HeroIcon.svelte'
   import LoadingSkeleton from '../components/LoadingSkeleton.svelte'
+  import StatePanel from '../components/StatePanel.svelte'
   import type { MatchSummary } from '../lib/types'
 
   const load = listMatches()
@@ -109,15 +110,9 @@
     </section>
 
     {#if matches.length === 0}
-      <section class="panel state">
-        <h2>No matches yet</h2>
-        <p>Matches appear here a few minutes after someone in the group finishes a game with the ingest app running.</p>
-      </section>
+      <StatePanel title="No matches yet" message="Matches appear a few minutes after someone finishes a game with the ingest app running." />
     {:else if visibleMatches.length === 0}
-      <section class="panel state">
-        <h2>No matches for these filters</h2>
-        <p>Try different friends, results, heroes, or dates.</p>
-      </section>
+      <StatePanel title="No matching games" message="Try different friends, results, heroes, or dates." actionLabel="Clear filters" onaction={clearFilters} />
     {:else}
       <ol class="list">
         {#each visibleMatches as m (m.uuid)}
@@ -179,7 +174,7 @@
       </ol>
     {/if}
   {:catch err}
-    <section class="panel state"><h2>Couldn’t load matches</h2><p>{err.message}</p></section>
+    <StatePanel kind="error" title="Couldn’t load matches" message={err.message} actionLabel="Try again" onaction={() => location.reload()} />
   {/await}
 </div>
 
@@ -188,8 +183,6 @@
   .intro { display: grid; gap: 0.35rem; }
   h1 { font-family: var(--display); font-weight: 800; font-size: clamp(2.2rem, 5vw, 3rem); line-height: 1; text-transform: uppercase; letter-spacing: 0.02em; }
   .intro p, .sub { color: var(--muted); }
-  .state { display: grid; gap: 0.4rem; color: var(--muted); }
-  .state h2 { color: var(--fg); font-size: 1.1rem; }
   .toolbar { display: grid; gap: 0.9rem; }
   .filters { display: flex; align-items: end; flex-wrap: wrap; gap: 0.65rem 0.9rem; }
   .filters > label, .member-filter { color: var(--muted); font-size: 0.78rem; font-weight: 600; }

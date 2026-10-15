@@ -3,6 +3,8 @@
   import { ago, fmt, mmss, when } from '../lib/format'
   import HeroIcon from '../components/HeroIcon.svelte'
   import LoadingSkeleton from '../components/LoadingSkeleton.svelte'
+  import StatePanel from '../components/StatePanel.svelte'
+  import Icon from '../components/Icon.svelte'
   import type { RecentPlayerMatch } from '../lib/types'
 
   let { name }: { name: string } = $props()
@@ -36,7 +38,7 @@
   {@const peakKda = Math.max(1, ...trend.map(matchKda))}
   <div class="page">
     <header class="intro">
-      <a class="back" href="/">← All matches</a>
+      <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/players">Players</a><Icon name="chevron-right" size={14} /><span class="current">{player.name || name}</span></nav>
       <h1>{player.name || name}</h1>
       <p>{player.matches} matches in the group’s recent history.</p>
     </header>
@@ -157,7 +159,7 @@
     </section>
   </div>
 {:catch err}
-  <section class="panel state"><h1>Couldn’t load this player</h1><p>{err.message}</p><p><a href="/">Back to all matches</a></p></section>
+  <StatePanel kind="error" title="Couldn’t load this player" message={err.message} actionLabel="Try again" onaction={() => location.reload()} />
 {/await}
 
 <style>
@@ -165,8 +167,6 @@
   .intro { display: grid; gap: 0.3rem; }
   .intro h1 { font-family: var(--display); font-size: clamp(2.2rem, 5vw, 3rem); line-height: 1; text-transform: uppercase; }
   .intro p, .hint, .sub { color: var(--muted); }
-  .back { color: var(--muted); font-size: 0.85rem; text-decoration: none; }
-  .back:hover { color: var(--fg); }
   .metric-group { display: grid; gap: 0.5rem; }
   .metric-group h2 { font-family: var(--display); font-size: 1.2rem; letter-spacing: 0.02em; text-transform: uppercase; }
   .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }

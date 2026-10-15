@@ -1,6 +1,8 @@
 <script lang="ts">
   import { listSessions } from '../lib/api'
   import { fmt, mmss, when } from '../lib/format'
+  import LoadingSkeleton from '../components/LoadingSkeleton.svelte'
+  import StatePanel from '../components/StatePanel.svelte'
   import type { MatchSession } from '../lib/types'
 
   const load = listSessions()
@@ -22,13 +24,10 @@
   </header>
 
   {#await load}
-    <p class="panel state">Loading sessions…</p>
+    <LoadingSkeleton variant="cards" label="Loading sessions" />
   {:then sessions}
     {#if sessions.length === 0}
-      <section class="panel state">
-        <h2>No sessions yet</h2>
-        <p>Sessions appear here when a tracked friend has played a processed match.</p>
-      </section>
+      <StatePanel title="No sessions yet" message="Sessions appear when a tracked friend has played a processed match." />
     {:else}
       <p class="sub count">{sessions.length} {sessions.length === 1 ? 'session' : 'sessions'} · {fmt(sessions.reduce((total, session) => total + session.matches.length, 0))} tracked games</p>
       <ol class="sessions">
@@ -73,7 +72,7 @@
       </ol>
     {/if}
   {:catch err}
-    <section class="panel state"><h2>Couldn’t load sessions</h2><p>{err.message}</p></section>
+    <StatePanel kind="error" title="Couldn’t load sessions" message={err.message} actionLabel="Try again" onaction={() => location.reload()} />
   {/await}
 </div>
 
@@ -83,8 +82,6 @@
   h1 { font-family: var(--display); font-weight: 800; font-size: clamp(2.2rem, 5vw, 3rem); line-height: 1; text-transform: uppercase; letter-spacing: 0.02em; }
   .intro p, .sub, .hint { color: var(--muted); }
   .count { margin: 0 0 -0.4rem; }
-  .state { display: grid; gap: 0.4rem; color: var(--muted); }
-  .state h2 { color: var(--fg); font-size: 1.1rem; }
   .sessions, .match-list { display: grid; gap: 0.8rem; margin: 0; padding: 0; list-style: none; }
   .session { display: grid; gap: 1rem; }
   .session-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }

@@ -11,6 +11,9 @@
   import PlayerPicker from '../components/PlayerPicker.svelte'
   import HeroIcon from '../components/HeroIcon.svelte'
   import LoadingSkeleton from '../components/LoadingSkeleton.svelte'
+  import StatePanel from '../components/StatePanel.svelte'
+  import Icon from '../components/Icon.svelte'
+  import { notify } from '../lib/toast.svelte'
   import type { MatchDetail } from '../lib/types'
 
   let { uuid }: { uuid: string } = $props()
@@ -30,6 +33,15 @@
 
   function selectTab(id: string) {
     setHash(id === 'overview' ? '' : id)
+  }
+
+  async function copyMatchLink() {
+    try {
+      await navigator.clipboard.writeText(location.href)
+      notify('Match link copied', 'success')
+    } catch {
+      notify('Couldn’t copy the match link', 'error')
+    }
   }
 
   function onTabKeydown(event: KeyboardEvent) {
@@ -71,11 +83,15 @@
 </svelte:head>
 
 {#if error}
-  <section class="panel state"><h1>Couldn’t load this match</h1><p>{error}</p><p><a href="/">Back to all matches</a></p></section>
+  <StatePanel kind="error" title="Couldn’t load this match" message={error} actionLabel="Try again" onaction={() => location.reload()} />
 {:else if !match}
   <LoadingSkeleton variant="detail" label="Loading match details" />
 {:else}
   <div class="page">
+    <nav class="breadcrumb match-crumb" aria-label="Breadcrumb">
+      <a href="/">Matches</a><Icon name="chevron-right" size={14} /><span class="current">Match {match.match_id}</span>
+      <button class="copy-link" type="button" onclick={copyMatchLink}><Icon name="copy" size={14} />Copy link</button>
+    </nav>
     <header class="hero panel">
       <div class="side team-0" class:won={match.winning_team === 0}>
         <span class="label">{TEAMS[0].name}</span>
@@ -144,9 +160,10 @@
 
 <style>
   .page { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
-  .state { display: grid; gap: 0.4rem; color: var(--muted); }
-  .state h1 { color: var(--fg); font-size: 1.3rem; }
   .sub { color: var(--muted); font-size: 0.85rem; }
+  .match-crumb { min-height: 1.8rem; }
+  .copy-link { display: inline-flex; align-items: center; gap: 0.35rem; margin-left: auto; padding: 0.3rem 0.5rem; border: 1px solid transparent; border-radius: 5px; background: none; color: var(--muted); font-size: 0.75rem; cursor: pointer; }
+  .copy-link:hover { color: var(--fg); border-color: var(--line); background: rgb(255 255 255 / 0.03); }
   .hero { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 1rem; padding: 1.5rem; position: relative; overflow: hidden; }
   .hero::before, .hero::after { content: ''; position: absolute; top: 0; bottom: 0; width: 40%; opacity: 0.12; pointer-events: none; }
   .hero::before { left: 0; background: linear-gradient(90deg, var(--amber), transparent); }

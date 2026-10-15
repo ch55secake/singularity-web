@@ -2,6 +2,8 @@
   import { listMatches } from '../lib/api'
   import { ago } from '../lib/format'
   import LoadingSkeleton from '../components/LoadingSkeleton.svelte'
+  import StatePanel from '../components/StatePanel.svelte'
+  import Icon from '../components/Icon.svelte'
   import type { MatchSummary } from '../lib/types'
 
   const load = listMatches()
@@ -68,7 +70,7 @@
             <a class="player-card panel" href="/p/{encodeURIComponent(player.name)}">
               <span class="card-heading">
                 <strong>{player.name}</strong>
-                <span class="arrow" aria-hidden="true">→</span>
+                <span class="arrow" aria-hidden="true"><Icon name="arrow-right" size={17} /></span>
               </span>
               <span class="stats">
                 <span><strong>{player.matches}</strong> {player.matches === 1 ? 'match' : 'matches'}</span>
@@ -83,14 +85,11 @@
         {/each}
       </ul>
     {:else}
-      <section class="panel state">
-        <h2>No player profiles yet</h2>
-        <p>Profiles appear here when a configured group member has a collected match.</p>
-      </section>
+      <StatePanel title="No player profiles yet" message="Profiles appear when a configured group member has a collected match." />
     {/if}
   </div>
 {:catch err}
-  <section class="panel state"><h1>Couldn’t load players</h1><p>{err.message}</p><p><a href="/">Back to matches</a></p></section>
+  <StatePanel kind="error" title="Couldn’t load players" message={err.message} actionLabel="Try again" onaction={() => location.reload()} />
 {/await}
 
 <style>
@@ -110,6 +109,4 @@
   .stats { justify-content: flex-start; color: var(--muted); font-size: 0.85rem; }
   .stats strong { color: var(--fg); }
   .last-played { font-size: 0.78rem; }
-  .state { display: grid; gap: 0.4rem; color: var(--muted); }
-  .state h1, .state h2 { color: var(--fg); }
 </style>

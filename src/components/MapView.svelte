@@ -24,6 +24,28 @@
   const tmax = $derived(Math.min(match.duration_s, (samples - 1) * match.paths.interval_s))
   const deathsSoFar = $derived(match.deaths.filter((d) => d.t <= t))
   const focusedPlayer = $derived(focus === null ? null : bySlot.get(focus) ?? null)
+  type KeyMoment =
+    | { id: string; t: number; kind: 'kill'; killer: Player | null; victim: Player | null }
+    | { id: string; t: number; kind: 'purchase'; player: Player; item: string }
+  const keyMoments = $derived.by(() => {
+    const kills: KeyMoment[] = match.deaths.map((death, index) => ({
+      id: `kill-${index}`,
+      t: death.t,
+      kind: 'kill',
+      killer: bySlot.get(death.killer) ?? null,
+      victim: bySlot.get(death.victim) ?? null,
+    }))
+    const purchases: KeyMoment[] = focusedPlayer
+      ? focusedPlayer.build.filter((entry) => entry.kind === 'item').map((entry, index) => ({
+          id: `purchase-${focusedPlayer.slot}-${index}`,
+          t: entry.t,
+          kind: 'purchase',
+          player: focusedPlayer,
+          item: entry.name,
+        }))
+      : []
+    return [...kills, ...purchases].sort((a, b) => a.t - b.t)
+  })
 
   let canvas: HTMLCanvasElement
   let box: HTMLDivElement
@@ -164,7 +186,7 @@
   })
 
   function jump(to: number) { t = Math.max(0, Math.min(tmax, to)); playing = false }
-  const name = (p: Player | undefined) => p ? (p.member ? `${p.member.name} (${p.hero.name})` : p.hero.name) : 'World'
+  const name = (p: Player | null | undefined) => p ? (p.member ? `${p.member.name} (${p.hero.name})` : p.hero.name) : 'World'
 </script>
 
 <section class="panel">
@@ -197,23 +219,28 @@
     </div>
 
     <aside class="feed">
-      <h3 class="label">Kills so far · {deathsSoFar.length}</h3>
+      <h3 class="label">Key moments · {keyMoments.length}</h3>
+      {#if !focusedPlayer}<p class="feed-hint">Select a player above to include their item purchases.</p>{/if}
       <ol>
-        {#each [...deathsSoFar].reverse() as d (d.t + ':' + d.victim)}
-          {@const killer = bySlot.get(d.killer)}
-          {@const victim = bySlot.get(d.victim)}
-          <li class:recent={t - d.t < KILL_FLASH_S}>
-            <button onclick={() => jump(d.t - 4)} title="Jump to 4 seconds before this kill">
+        {#each [...keyMoments].reverse() as d (d.id)}
+          <li class:recent={Math.abs(t - d.t) < KILL_FLASH_S}>
+            <button onclick={() => jump(d.kind === 'kill' ? d.t - 4 : d.t)} title={d.kind === 'kill' ? 'Jump to 4 seconds before this kill' : 'Jump to this item purchase'}>
               <span class="ft num">{mmss(d.t)}</span>
-              {#if killer}<HeroIcon hero={killer.hero} team={killer.team} size={22} />{/if}
-              <span class="kn">{name(killer)}</span>
-              <span class="arrow">→</span>
-              {#if victim}<HeroIcon hero={victim.hero} team={victim.team} size={22} />{/if}
-              <span class="kn">{name(victim)}</span>
+              {#if d.kind === 'kill'}
+                {#if d.killer}<HeroIcon hero={d.killer.hero} team={d.killer.team} size={22} />{/if}
+                <span class="kn">{name(d.killer)}</span>
+                <span class="arrow">→</span>
+                {#if d.victim}<HeroIcon hero={d.victim.hero} team={d.victim.team} size={22} />{/if}
+                <span class="kn">{name(d.victim)}</span>
+              {:else}
+                <HeroIcon hero={d.player.hero} team={d.player.team} size={22} />
+                <span class="event-kind">BUY</span>
+                <span class="kn">{d.item}</span>
+              {/if}
             </button>
           </li>
         {:else}
-          <li class="empty">No kills yet. Press play or drag the slider.</li>
+          <li class="empty">No key moments yet. Select a player above to include item purchases.</li>
         {/each}
       </ol>
     </aside>
@@ -236,6 +263,7 @@
   .toggles { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; font-size: 0.88rem; color: var(--muted); }
   .toggles label { display: inline-flex; gap: 0.4rem; align-items: center; cursor: pointer; }
   .feed { display: grid; gap: 0.5rem; align-content: start; min-width: 0; }
+  .feed-hint { color: var(--muted); font-size: 0.75rem; }
   .feed ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 40rem; overflow-y: auto; }
   .feed button { width: 100%; display: flex; align-items: center; gap: 0.4rem; background: none; border: 0; padding: 0.3rem 0.4rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; text-align: left; }
   .feed button:hover { background: var(--panel-2); }
@@ -243,6 +271,7 @@
   .ft { color: var(--muted); min-width: 2.6rem; }
   .kn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
   .arrow { color: var(--faint); }
+  .event-kind { flex: none; color: var(--amber); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.05em; }
   .empty { color: var(--muted); font-size: 0.85rem; padding: 0.4rem; }
   @media (max-width: 60rem) { .layout { grid-template-columns: 1fr; } .feed ol { max-height: 18rem; } }
 </style>

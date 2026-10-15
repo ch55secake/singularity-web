@@ -212,13 +212,10 @@
   .players a:hover { text-decoration: underline; }
   .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
   .row {
-    position: relative; overflow: hidden;
     display: grid; grid-template-columns: 7rem minmax(0, 1.3fr) minmax(0, 1fr); gap: 1rem 1.5rem; align-items: center;
     text-decoration: none; transform: translateY(0); transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease, box-shadow var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out);
   }
-  .row::before { content: ''; position: absolute; inset: -1px 14% auto; height: 1px; background: linear-gradient(90deg, transparent, var(--amber), var(--sapphire), transparent); opacity: 0; transition: opacity var(--duration-fast) ease; }
-  .row:hover, .row:focus-visible { border-color: #3b3d45; background: var(--panel-2); box-shadow: 0 18px 42px rgb(0 0 0 / 0.24); transform: translateY(-2px); }
-  .row:hover::before, .row:focus-visible::before { opacity: 0.85; }
+  .row:hover, .row:focus-visible { border-color: #3b3d45; background: #111216; box-shadow: none; transform: translateY(-1px); }
   .row:active { transform: translateY(0) scale(0.997); }
   .row :global(.icon) { transition: transform var(--duration-fast) var(--ease-out), filter var(--duration-fast) ease; }
   .row:hover :global(.icon), .row:focus-visible :global(.icon) { transform: translateY(-1px); filter: saturate(1.12) brightness(1.05); }

@@ -2,9 +2,11 @@
 import { route } from './lib/router.svelte'
 import MatchList from './pages/MatchList.svelte'
 import MatchPage from './pages/MatchPage.svelte'
+import PlayersPage from './pages/PlayersPage.svelte'
 import PlayerPage from './pages/PlayerPage.svelte'
 
 const matchUuid = $derived(route.path.match(/^\/m\/([0-9a-f-]{36})\/?$/i)?.[1])
+const playersPage = $derived(/^\/players\/?$/.test(route.path))
 const playerPath = $derived(route.path.match(/^\/p\/([^/]+)\/?$/)?.[1])
 const playerName = $derived(playerPath ? decodeURIComponent(playerPath) : null)
 </script>
@@ -15,8 +17,9 @@ const playerName = $derived(playerPath ? decodeURIComponent(playerPath) : null)
       <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="var(--amber)" stroke-width="3"/><circle cx="16" cy="16" r="3.5" fill="var(--sapphire)"/></svg>
       Singularity
     </a>
-    <nav>
+    <nav aria-label="Primary navigation">
       <a href="/" aria-current={route.path === '/' ? 'page' : undefined}>Matches</a>
+      <a href="/players" aria-current={playersPage ? 'page' : undefined}>Players</a>
       {#if playerName}<a href="/p/{encodeURIComponent(playerName)}" aria-current="page">{playerName}</a>{/if}
     </nav>
   </div>
@@ -27,6 +30,8 @@ const playerName = $derived(playerPath ? decodeURIComponent(playerPath) : null)
     <MatchList />
   {:else if matchUuid}
     {#key matchUuid}<MatchPage uuid={matchUuid} />{/key}
+  {:else if playersPage}
+    <PlayersPage />
   {:else if playerName}
     {#key playerName}<PlayerPage name={playerName} />{/key}
   {:else}
@@ -42,6 +47,7 @@ const playerName = $derived(playerPath ? decodeURIComponent(playerPath) : null)
   .inner { max-width: 76rem; margin: 0 auto; padding: 0.7rem 16px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
   .brand { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--display); font-weight: 800; font-size: 1.35rem; letter-spacing: 0.04em; text-transform: uppercase; text-decoration: none; }
   .brand svg { width: 1.5rem; height: 1.5rem; }
+  nav { display: flex; align-items: center; gap: 1.2rem; }
   nav a { text-decoration: none; color: var(--muted); font-weight: 600; font-size: 0.9rem; }
   nav a[aria-current='page'] { color: var(--fg); }
   main { max-width: 76rem; margin: 0 auto; padding: 1.5rem 16px 4rem; }

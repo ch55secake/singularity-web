@@ -47,7 +47,7 @@
       <div class="heroes">
         {#each player.heroes as hero (hero.id)}
           <div class="hero-row">
-            <span class="hero-mark" aria-hidden="true">{hero.name.slice(0, 2)}</span>
+            <HeroIcon hero={{ id: hero.id, name: hero.name, icon: hero.icon, card: null }} size={32} />
             <span class="hero-name">{hero.name}</span>
             <span class="sub num">{hero.matches} {hero.matches === 1 ? 'match' : 'matches'}</span>
             <span class="bar"><i style:width="{`${(hero.matches / player.matches) * 100}%`}"></i></span>
@@ -124,7 +124,6 @@
   .stat .sub { font-size: 0.75rem; }
   .heroes { display: grid; gap: 0.65rem; }
   .hero-row { display: grid; grid-template-columns: 2rem 10rem 5rem minmax(5rem, 1fr); gap: 0.7rem; align-items: center; }
-  .hero-mark { width: 2rem; height: 2rem; display: grid; place-items: center; border-radius: 5px; background: var(--panel-2); color: var(--muted); font-family: var(--display); font-weight: 700; }
   .hero-name { font-weight: 600; }
   .bar { height: 0.35rem; background: var(--panel-2); border-radius: 99px; overflow: hidden; }
   .bar i { display: block; height: 100%; background: var(--member); border-radius: inherit; }

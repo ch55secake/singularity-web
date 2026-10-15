@@ -5,10 +5,44 @@
   import type { MatchSummary } from '../lib/types'
 
   const load = listMatches()
-  let selected = $state('')
+  let selectedMembers = $state<string[]>([])
+  let selectedResult = $state('')
+  let selectedHero = $state('')
+  let dateFrom = $state('')
+  let dateTo = $state('')
 
   const members = (m: MatchSummary) => m.players.filter((p) => p.member)
-  const includesPlayer = (m: MatchSummary) => !selected || m.players.some((p) => p.member?.name === selected)
+  const groupResult = (m: MatchSummary) => {
+    const ours = members(m)
+    if (ours.length === 0) return 'none'
+    const wins = ours.filter((p) => p.team === m.winning_team).length
+    return wins === ours.length ? 'win' : wins === 0 ? 'loss' : 'split'
+  }
+  const localDay = (unix: number) => {
+    const date = new Date(unix * 1000)
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  }
+  const filteredMatches = (matches: MatchSummary[]) => matches.filter((m) => {
+    const ours = members(m)
+    const friendMatch = selectedMembers.length === 0 || selectedMembers.some((name) => ours.some((p) => p.member?.name === name))
+    const heroMatch = !selectedHero || m.players.some((p) => p.hero.name === selectedHero)
+    const day = localDay(m.start_time)
+    return friendMatch &&
+      (!selectedResult || groupResult(m) === selectedResult) &&
+      heroMatch &&
+      (!dateFrom || day >= dateFrom) &&
+      (!dateTo || day <= dateTo)
+  })
+  const toggleMember = (name: string, checked: boolean) => {
+    selectedMembers = checked ? [...selectedMembers, name] : selectedMembers.filter((item) => item !== name)
+  }
+  const clearFilters = () => {
+    selectedMembers = []
+    selectedResult = ''
+    selectedHero = ''
+    dateFrom = ''
+    dateTo = ''
+  }
 </script>
 
 <svelte:head><title>Matches · Singularity</title></svelte:head>
@@ -22,14 +56,47 @@
   {#await load}
     <p class="state">Loading matches…</p>
   {:then matches}
+    {@const visibleMatches = filteredMatches(matches)}
     {@const memberNames = [...new Set(matches.flatMap((m) => m.players.flatMap((p) => p.member ? [p.member.name] : [])))].sort()}
+    {@const heroNames = [...new Set(matches.flatMap((m) => m.players.map((p) => p.hero.name)))].sort()}
     <section class="toolbar panel">
-      <label for="player-filter">Show matches with</label>
-      <select id="player-filter" bind:value={selected}>
-        <option value="">Everyone</option>
-        {#each memberNames as name}<option value={name}>{name}</option>{/each}
-      </select>
-      <span class="sub">{matches.filter(includesPlayer).length} of {matches.length} matches</span>
+      <fieldset class="member-filter">
+        <legend>Friends</legend>
+        <details>
+          <summary>{selectedMembers.length ? `${selectedMembers.length} selected` : 'Any friend'}</summary>
+          <div class="member-options">
+            {#each memberNames as name}
+              <label><input type="checkbox" checked={selectedMembers.includes(name)} onchange={(event) => toggleMember(name, event.currentTarget.checked)} />{name}</label>
+            {/each}
+          </div>
+        </details>
+        <span class="filter-hint">matches with any selected friend</span>
+      </fieldset>
+      <label class="filter-control">Group result
+        <select bind:value={selectedResult}>
+          <option value="">Any result</option>
+          <option value="win">Group win</option>
+          <option value="loss">Group loss</option>
+          <option value="split">Split</option>
+          <option value="none">No friends</option>
+        </select>
+      </label>
+      <label class="filter-control">Hero
+        <select bind:value={selectedHero}>
+          <option value="">Any hero</option>
+          {#each heroNames as hero}<option value={hero}>{hero}</option>{/each}
+        </select>
+      </label>
+      <label class="filter-control">From
+        <input type="date" bind:value={dateFrom} />
+      </label>
+      <label class="filter-control">To
+        <input type="date" bind:value={dateTo} />
+      </label>
+      {#if selectedMembers.length || selectedResult || selectedHero || dateFrom || dateTo}
+        <button class="clear" type="button" onclick={clearFilters}>Clear filters</button>
+      {/if}
+      <span class="sub count" aria-live="polite">{visibleMatches.length} of {matches.length} matches</span>
       {#if memberNames.length}
         <nav class="players" aria-label="Player pages">
           <span class="label">Player pages</span>
@@ -43,14 +110,14 @@
         <h2>No matches yet</h2>
         <p>Matches appear here a few minutes after someone in the group finishes a game with the ingest app running.</p>
       </section>
-    {:else if matches.filter(includesPlayer).length === 0}
+    {:else if visibleMatches.length === 0}
       <section class="panel state">
-        <h2>No matches for {selected}</h2>
-        <p>Choose everyone or another group member to see more matches.</p>
+        <h2>No matches for these filters</h2>
+        <p>Try different friends, results, heroes, or dates.</p>
       </section>
     {:else}
       <ol class="list">
-        {#each matches.filter(includesPlayer) as m (m.uuid)}
+        {#each visibleMatches as m (m.uuid)}
           {@const ours = members(m)}
           {@const groupWins = ours.filter((p) => p.team === m.winning_team).length}
           {@const groupResult = ours.length === 0 ? 'No group' : groupWins === ours.length ? 'Group win' : groupWins === 0 ? 'Group loss' : 'Split' }
@@ -121,8 +188,21 @@
   .state { display: grid; gap: 0.4rem; color: var(--muted); }
   .state h2 { color: var(--fg); font-size: 1.1rem; }
   .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 0.65rem 0.9rem; }
-  .toolbar label { color: var(--muted); font-size: 0.88rem; }
+  .toolbar > label, .member-filter { color: var(--muted); font-size: 0.82rem; }
+  .member-filter { display: grid; gap: 0.25rem; margin: 0; padding: 0; border: 0; }
+  .member-filter legend { padding: 0; }
+  .member-filter details { position: relative; }
+  .member-filter summary { color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 0.35rem 0.5rem; cursor: pointer; list-style-position: inside; }
+  .member-options { position: absolute; z-index: 2; top: calc(100% + 0.25rem); left: 0; display: grid; gap: 0.35rem; min-width: 14rem; max-height: 16rem; overflow: auto; padding: 0.6rem; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 0.5rem 1.5rem #0008; }
+  .member-options label { display: flex; align-items: center; gap: 0.5rem; padding: 0.2rem; color: var(--fg); cursor: pointer; }
+  .member-options input { accent-color: var(--member); }
+  .filter-hint { color: var(--faint); font-size: 0.68rem; }
+  .filter-control { display: grid; gap: 0.25rem; }
   select { color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 0.35rem 0.5rem; }
+  input[type='date'] { color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 0.3rem 0.4rem; }
+  .clear { align-self: end; padding: 0.35rem 0; border: 0; background: none; color: var(--member); cursor: pointer; }
+  .clear:hover { text-decoration: underline; }
+  .count { align-self: end; }
   .players { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0.35rem 0.7rem; margin-left: auto; }
   .players a { color: var(--member); font-weight: 600; text-decoration: none; }
   .players a:hover { text-decoration: underline; }

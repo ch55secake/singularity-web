@@ -1,8 +1,8 @@
 import type { Team } from './types'
 
 export const TEAMS: Record<Team, { name: string; short: string }> = {
-  0: { name: 'Archmother', short: 'Archmother' },
-  1: { name: 'Hidden King', short: 'Hidden King' },
+  0: { name: 'Hidden King', short: 'Hidden King' },
+  1: { name: 'Archmother', short: 'Archmother' },
 }
 
 export const fmt = (n: number) => n.toLocaleString('en-GB')

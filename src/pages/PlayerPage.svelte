@@ -2,11 +2,14 @@
   import { getPlayer } from '../lib/api'
   import { ago, fmt, mmss, when } from '../lib/format'
   import HeroIcon from '../components/HeroIcon.svelte'
+  import type { RecentPlayerMatch } from '../lib/types'
 
   let { name }: { name: string } = $props()
 
   const load = $derived(getPlayer(name))
   const percent = (value: number) => `${Math.round(value * 100)}%`
+  const matchKda = (match: RecentPlayerMatch) => (match.kills + match.assists) / Math.max(match.deaths, 1)
+  const shortDate = (unix: number) => new Date(unix * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 </script>
 
 <svelte:head><title>{name} · Singularity</title></svelte:head>
@@ -57,9 +60,32 @@
 
     <section class="panel">
       <div class="panel-head"><h2>Recent form</h2><span class="hint">Latest {player.recent.length} matches</span></div>
+      {#if player.recent.length}
+        {@const trend = [...player.recent].reverse()}
+        {@const peakKda = Math.max(1, ...trend.map(matchKda))}
+        <figure class="form-chart">
+          <figcaption><span class="label">KDA per match</span><span class="hint">Oldest → newest</span></figcaption>
+          <div class="trend-scroll">
+            <ol class="trend">
+              {#each trend as match (match.uuid)}
+                {@const won = match.team === match.winning_team}
+                {@const kda = matchKda(match)}
+                <li class:win={won} class:loss={!won} title="Match {match.match_id}: {kda.toFixed(2)} KDA · {won ? 'Win' : 'Loss'}">
+                  <span class="trend-value num">{kda.toFixed(1)}</span>
+                  <span class="trend-bar"><i style:--height="{`${Math.max(5, (kda / peakKda) * 100)}%`}"></i></span>
+                  <span class="trend-meta"><span>{won ? 'W' : 'L'}</span><span>{shortDate(match.start_time)}</span></span>
+                </li>
+              {/each}
+            </ol>
+          </div>
+          <p class="chart-note">KDA is (kills + assists) ÷ deaths; a zero-death match uses one as the divisor.</p>
+        </figure>
+      {:else}
+        <p class="empty">No recent matches to chart yet.</p>
+      {/if}
       <div class="scroll-x">
         <table class="num">
-          <thead><tr><th>Result</th><th>Match</th><th>Hero</th><th>K/D/A</th><th>Length</th><th>Date</th></tr></thead>
+          <thead><tr><th>Result</th><th>Match</th><th>Hero</th><th>K/D/A</th><th>KDA</th><th>Length</th><th>Date</th></tr></thead>
           <tbody>
             {#each player.recent as match (match.uuid)}
               <tr>
@@ -67,11 +93,12 @@
                 <td><a href="/m/{match.uuid}">{match.match_id}</a></td>
                 <td class="hero-cell"><HeroIcon hero={match.hero} team={match.team} size={26} />{match.hero.name}</td>
                 <td>{match.kills}/{match.deaths}/{match.assists}</td>
+                <td>{matchKda(match).toFixed(2)}</td>
                 <td>{mmss(match.duration_s)}</td>
                 <td title={when(match.start_time)}>{ago(match.start_time)}</td>
               </tr>
             {:else}
-              <tr><td colspan="6" class="empty">No recent matches found.</td></tr>
+              <tr><td colspan="7" class="empty">No recent matches found.</td></tr>
             {/each}
           </tbody>
         </table>
@@ -101,6 +128,19 @@
   .hero-name { font-weight: 600; }
   .bar { height: 0.35rem; background: var(--panel-2); border-radius: 99px; overflow: hidden; }
   .bar i { display: block; height: 100%; background: var(--member); border-radius: inherit; }
+  .form-chart { display: grid; gap: 0.45rem; margin: 0 0 1rem; }
+  .form-chart figcaption { display: flex; align-items: baseline; gap: 0.75rem; }
+  .trend-scroll { overflow-x: auto; }
+  .trend { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(3.25rem, 1fr); align-items: end; gap: 0.35rem; min-width: 100%; min-height: 7.5rem; margin: 0; padding: 0.5rem 0 0; list-style: none; }
+  .trend li { display: grid; grid-template-rows: auto 4.5rem auto; justify-items: center; gap: 0.2rem; min-width: 0; }
+  .trend-value { font-size: 0.7rem; }
+  .trend-bar { display: flex; align-items: end; width: min(1.4rem, 70%); height: 100%; overflow: hidden; border-radius: 4px 4px 0 0; background: var(--panel-2); }
+  .trend-bar i { display: block; width: 100%; height: var(--height); min-height: 3px; background: var(--bad); border-radius: inherit; }
+  .trend li.win .trend-bar i { background: var(--good); }
+  .trend-meta { display: flex; flex-direction: column; align-items: center; color: var(--muted); font-size: 0.64rem; line-height: 1.2; white-space: nowrap; }
+  .trend li.win .trend-meta span:first-child { color: var(--good); font-weight: 700; }
+  .trend li.loss .trend-meta span:first-child { color: var(--bad); font-weight: 700; }
+  .chart-note { color: var(--faint); font-size: 0.72rem; }
   table { width: 100%; border-collapse: collapse; min-width: 38rem; font-size: 0.9rem; }
   th, td { padding: 0.5rem 0.6rem; text-align: right; white-space: nowrap; border-top: 1px solid var(--line); }
   th { border-top: 0; color: var(--muted); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; }

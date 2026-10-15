@@ -24,7 +24,6 @@
   const samples = $derived(Math.max(...Object.values(match.paths.players).map((p) => p.x.length)))
   const tmax = $derived(Math.min(match.duration_s, (samples - 1) * match.paths.interval_s))
   const deathsSoFar = $derived(match.deaths.filter((d) => d.t <= t))
-  const objectivesSoFar = $derived(match.objectives.filter((objective) => objective.t <= t && objective.position))
   const focusedPlayer = $derived(focus === null ? null : bySlot.get(focus) ?? null)
   type KeyMoment =
     | { id: string; t: number; kind: 'kill'; killer: Player | null; victim: Player | null }
@@ -74,6 +73,31 @@
     patron_core: 'C',
     mid_boss: 'M',
   })[kind]
+  const objectiveKindForKey = (key: string): ObjectiveEvent['kind'] | null => {
+    if (key === 'mid_boss') return 'mid_boss'
+    if (key.endsWith('_core')) return 'patron_core'
+    if (key.endsWith('_titan')) return 'patron'
+    if (/_tier1_\d+$/.test(key)) return 'guardian'
+    if (/_tier2_\d+$/.test(key)) return 'walker'
+    return null
+  }
+  const objectiveMarkers = $derived.by(() =>
+    Object.entries(match.map.objective_positions ?? {}).flatMap(([key, position]) => {
+      const kind = objectiveKindForKey(key)
+      if (!kind) return []
+      const capturedAt = match.objectives.find((event) => event.position_key === key)?.t ?? null
+      return [{
+        key,
+        kind,
+        team: key === 'mid_boss' ? null : key.startsWith('team1_') ? 1 : 0,
+        position,
+        capturedAt,
+      }]
+    }),
+  )
+  const standingObjectives = $derived(
+    objectiveMarkers.filter((objective) => objective.capturedAt === null || t < objective.capturedAt),
+  )
 
   let canvas: HTMLCanvasElement
   let box: HTMLDivElement
@@ -207,10 +231,10 @@
     }
 
     if (showObjectives) {
-      for (const objective of objectivesSoFar) {
+      for (const objective of standingObjectives) {
         if (!objective.position || match.map.radius <= 0) continue
         const [px, py] = toPx(objective.position[0], objective.position[1])
-        const colour = TEAM_COLOURS[objective.team]
+        const colour = objective.team === null ? '#d7d3ca' : TEAM_COLOURS[objective.team]
         ctx.beginPath()
         ctx.arc(px, py, 9, 0, Math.PI * 2)
         ctx.fillStyle = '#11141a'
@@ -231,7 +255,7 @@
 
   $effect(() => {
     // Redraw whenever anything the drawing reads changes.
-    void [t, size, img, focus, showTrails, showDeaths, showObjectives, objectivesSoFar, showHeat]
+    void [t, size, img, focus, showTrails, showDeaths, showObjectives, standingObjectives, showHeat]
     draw()
   })
 
@@ -248,7 +272,7 @@
   <div class="layout">
     <div class="stage">
       <div class="canvas-box" bind:this={box}>
-        <canvas bind:this={canvas} style:width="{size}px" style:height="{size}px" aria-label="Map of player positions at {mmss(t)}. Objective symbols appear after a structure is taken."></canvas>
+        <canvas bind:this={canvas} style:width="{size}px" style:height="{size}px" aria-label="Map of player positions at {mmss(t)}. Objective symbols disappear when their structures are taken."></canvas>
         {#if imgFailed}<p class="imgnote">Map image didn’t load, so positions are shown on a blank map.</p>{/if}
       </div>
       <div class="controls">
@@ -267,7 +291,7 @@
         <label><input id="map-objectives" type="checkbox" bind:checked={showObjectives} /> Objectives</label>
         <label><input id="map-heat" type="checkbox" bind:checked={showHeat} /> Heatmap for {focusedPlayer?.hero.name ?? 'selected player'}</label>
       </div>
-      <p class="objective-legend">Objective symbols: G Guardian · W Walker · S Shrine · B Base Guardian · P Patron · C Core · M Mid Boss. Color shows the structure’s team, or the claiming team for Mid Boss.</p>
+      <p class="objective-legend">G Guardian · W Walker · P Patron · C Core · M Mid Boss. Symbols show standing objectives and disappear when taken; color shows the owning team (Mid Boss is neutral).</p>
     </div>
 
     <aside class="feed">

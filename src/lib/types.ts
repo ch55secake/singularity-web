@@ -92,6 +92,7 @@ export interface ObjectiveEvent {
   /** Owning team for structures; claiming team for the mid-boss. */
   team: Team;
   kind: 'guardian' | 'walker' | 'shrine' | 'base_guardian' | 'patron' | 'patron_core' | 'mid_boss';
+  position_key: string | null;
   /** World coordinates; null when the current map assets do not locate this objective. */
   position: [number, number] | null;
 }
@@ -116,7 +117,7 @@ export interface MatchDetail {
   deaths: Death[];
   objectives: ObjectiveEvent[];
   paths: { interval_s: number; players: Record<string, Path> };
-  map: { radius: number; image: string };
+  map: { radius: number; image: string; objective_positions: Record<string, [number, number]> };
 }
 
 export interface PlayerHeroAverage {

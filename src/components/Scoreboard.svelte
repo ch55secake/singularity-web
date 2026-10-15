@@ -41,7 +41,7 @@
     <h2>Scoreboard</h2>
     <span class="hint">Click a player to follow them across tabs. <span class="best-key">Bold</span> marks the best in the match.</span>
   </div>
-  <div class="scroll-x">
+  <div class="scroll-x data-scroll" role="region" aria-label="Scoreboard statistics">
     <table class="num">
       <thead>
         <tr><th class="who">Player</th>{#each cols as c}<th title={c.title}>{c.label}</th>{/each}</tr>
@@ -77,20 +77,22 @@
 <style>
   .hint { font-size: 0.82rem; color: var(--muted); }
   .best-key { font-weight: 700; color: var(--fg); }
-  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 52rem; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.9rem; min-width: 52rem; }
   th, td { padding: 0.45rem 0.55rem; text-align: right; white-space: nowrap; }
-  thead th { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line); }
-  .who { text-align: left; }
-  .team-row th { text-align: left; padding-top: 1rem; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; color: var(--team); text-transform: uppercase; }
+  thead th { position: sticky; top: 0; z-index: 3; background: var(--panel); box-shadow: 0 1px 0 var(--line); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .who { position: sticky; left: 0; z-index: 2; min-width: 10.5rem; text-align: left; background: var(--panel); box-shadow: 1px 0 0 var(--line); }
+  thead .who { z-index: 4; }
+  .team-row th { position: sticky; left: 0; z-index: 2; text-align: left; padding-top: 1rem; background: var(--panel); box-shadow: 0 1px 0 var(--line); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; color: var(--team); text-transform: uppercase; }
   .swatch { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 2px; background: var(--team); margin-right: 0.5rem; }
   tbody tr:not(.team-row) { border-top: 1px solid var(--line); cursor: pointer; }
-  tbody tr:not(.team-row):hover { background: var(--panel-2); }
-  tr.focus { background: var(--panel-2); box-shadow: inset 3px 0 0 var(--team); }
+  tbody tr:not(.team-row):hover, tr.focus { background: var(--panel-2); }
+  tbody tr:not(.team-row):hover .who, tr.focus .who { background: var(--panel-2); }
+  tr.focus .who { box-shadow: inset 3px 0 0 var(--team), 1px 0 0 var(--line); }
   td { color: var(--muted); }
   td.best { color: var(--fg); font-weight: 700; }
   td.positive { color: var(--good); }
   td.negative { color: var(--bad); }
-  .who-btn { display: flex; align-items: center; gap: 0.65rem; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+  .who-btn { display: flex; width: 100%; align-items: center; gap: 0.65rem; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
   .names { display: grid; line-height: 1.2; }
   .hero { color: var(--fg); font-weight: 600; }
   .tag { color: var(--member); font-size: 0.78rem; font-weight: 600; }

@@ -81,7 +81,15 @@ p { margin: 0; }
 }
 .team-0 { --team: var(--amber); }
 .team-1 { --team: var(--sapphire); }
-.scroll-x { overflow-x: auto; min-width: 0; }
+.scroll-x { overflow-x: auto; min-width: 0; scrollbar-width: thin; scrollbar-color: var(--faint) transparent; }
+.data-scroll {
+  max-height: min(70vh, 42rem);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  box-shadow: 0 -1rem 2rem -1.8rem var(--sapphire) inset, -1rem 0 2rem -1.8rem var(--sapphire) inset;
+}
+.data-scroll:focus-visible { outline-offset: 3px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }

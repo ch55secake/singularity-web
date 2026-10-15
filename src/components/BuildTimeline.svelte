@@ -41,7 +41,7 @@
 
   <div>
     <h3 class="label">Ability points</h3>
-    <div class="scroll-x">
+    <div class="scroll-x data-scroll" role="region" aria-label="Ability upgrade timeline">
       <table class="num">
         <thead><tr><th class="l">Ability</th>{#each { length: maxSteps } as _, i}<th>{i === 0 ? 'Unlocked' : `Upgrade ${i}`}</th>{/each}</tr></thead>
         <tbody>
@@ -71,10 +71,11 @@
   .t { color: var(--muted); }
   .n { line-height: 1.2; max-width: 100%; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; }
   li.sold { opacity: 0.4; }
-  table { border-collapse: collapse; font-size: 0.88rem; min-width: 32rem; width: 100%; }
+  table { border-collapse: separate; border-spacing: 0; font-size: 0.88rem; min-width: 32rem; width: 100%; }
   th, td { padding: 0.4rem 0.6rem; text-align: center; white-space: nowrap; border-top: 1px solid var(--line); }
-  th { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; border-top: 0; }
-  .l { text-align: left; }
+  th { position: sticky; top: 0; z-index: 3; background: var(--panel); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; border-top: 0; }
+  .l { position: sticky; left: 0; z-index: 2; min-width: 10rem; text-align: left; background: var(--panel); box-shadow: 1px 0 0 var(--line); }
+  thead .l { z-index: 4; }
   .ab { display: inline-flex; align-items: center; gap: 0.5rem; }
   .ab img { width: 24px; height: 24px; border-radius: 4px; background: var(--panel-2); }
 </style>

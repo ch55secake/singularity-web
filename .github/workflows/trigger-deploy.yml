@@ -1,0 +1,31 @@
+name: Request production deployment
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    name: Dispatch deployment
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch to rake
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.SINGULARITY_DEPLOY_DISPATCH_TOKEN }}
+          script: |
+            await github.rest.repos.createDispatchEvent({
+              owner: 'ch55secake',
+              repo: 'rake',
+              event_type: 'singularity-source-merged',
+              client_payload: {
+                source_repository: context.payload.repository.full_name,
+                source_sha: context.payload.pull_request.merge_commit_sha,
+                source_pr: context.payload.pull_request.number
+              }
+            })

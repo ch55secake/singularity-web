@@ -121,6 +121,9 @@
           {@const ours = members(m)}
           {@const groupWins = ours.filter((p) => p.team === m.winning_team).length}
           {@const groupResult = ours.length === 0 ? 'No group' : groupWins === ours.length ? 'Group win' : groupWins === 0 ? 'Group loss' : 'Split' }
+          {@const groupKills = ours.reduce((total, p) => total + p.kills, 0)}
+          {@const groupDeaths = ours.reduce((total, p) => total + p.deaths, 0)}
+          {@const groupAssists = ours.reduce((total, p) => total + p.assists, 0)}
           <li>
             <a class="row panel" href="/m/{m.uuid}">
               <div class="meta">
@@ -144,6 +147,13 @@
                 {/each}
               </div>
               <div class="ours">
+                {#if ours.length}
+                  <div class="group-recap">
+                    <strong>{ours.length} {ours.length === 1 ? 'friend' : 'friends'}</strong>
+                    <span class="sub">{groupWins}/{ours.length} on winning team</span>
+                    <span class="recap-kda"><span class="label">Combined K/D/A</span><span class="num">{groupKills}/{groupDeaths}/{groupAssists}</span></span>
+                  </div>
+                {/if}
                 {#each ours as p (p.slot)}
                   <span class="member" class:win={p.team === m.winning_team}>
                     <span class="member-result" aria-label={p.team === m.winning_team ? 'Win' : 'Loss'}>{p.team === m.winning_team ? 'W' : 'L'}</span>
@@ -218,6 +228,9 @@
   .winner { border-radius: 3px; padding: 0.05rem 0.25rem; color: var(--team); background: color-mix(in srgb, var(--team) 12%, transparent); font-size: 0.57rem; letter-spacing: 0.06em; }
   .heroes { display: flex; gap: 4px; flex-wrap: wrap; }
   .ours { display: grid; gap: 0.35rem; font-size: 0.9rem; min-width: 0; }
+  .group-recap { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.2rem 0.65rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--line); }
+  .recap-kda { display: inline-flex; align-items: baseline; gap: 0.35rem; margin-left: auto; }
+  .recap-kda .label { font-size: 0.65rem; }
   .member { display: grid; grid-template-columns: 1.25rem minmax(0, 1fr) auto; align-items: center; gap: 0.25rem 0.55rem; min-width: 0; }
   .member-result { display: inline-grid; place-items: center; width: 1.15rem; height: 1.15rem; border: 1px solid color-mix(in srgb, var(--bad) 45%, var(--line)); border-radius: 50%; color: var(--bad); font-family: var(--display); font-size: 0.68rem; font-weight: 800; line-height: 1; }
   .member.win .member-result { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, var(--line)); }

@@ -10,6 +10,7 @@
   import MapView from '../components/MapView.svelte'
   import PlayerPicker from '../components/PlayerPicker.svelte'
   import HeroIcon from '../components/HeroIcon.svelte'
+  import LoadingSkeleton from '../components/LoadingSkeleton.svelte'
   import type { MatchDetail } from '../lib/types'
 
   let { uuid }: { uuid: string } = $props()
@@ -72,7 +73,7 @@
 {#if error}
   <section class="panel state"><h1>Couldn’t load this match</h1><p>{error}</p><p><a href="/">Back to all matches</a></p></section>
 {:else if !match}
-  <p class="state">Loading match…</p>
+  <LoadingSkeleton variant="detail" label="Loading match details" />
 {:else}
   <div class="page">
     <header class="hero panel">

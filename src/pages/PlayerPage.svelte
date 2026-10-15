@@ -2,6 +2,7 @@
   import { getPlayer } from '../lib/api'
   import { ago, fmt, mmss, when } from '../lib/format'
   import HeroIcon from '../components/HeroIcon.svelte'
+  import LoadingSkeleton from '../components/LoadingSkeleton.svelte'
   import type { RecentPlayerMatch } from '../lib/types'
 
   let { name }: { name: string } = $props()
@@ -28,7 +29,7 @@
 <svelte:head><title>{name} · Singularity</title></svelte:head>
 
 {#await load}
-  <p class="state">Loading player…</p>
+  <LoadingSkeleton variant="profile" label="Loading player profile" />
 {:then player}
   {@const selectedMatches = formMatches(player.recent, formView)}
   {@const trend = formView === 'recent' ? [...selectedMatches].reverse() : selectedMatches}

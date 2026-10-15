@@ -60,29 +60,29 @@ $effect(() => {
 <ToastRegion />
 
 <style>
-  .site { border-bottom: 1px solid color-mix(in srgb, var(--line) 84%, transparent); background: color-mix(in srgb, var(--bg) 88%, transparent); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(18px) saturate(1.1); }
-  .site::after { content: ''; position: absolute; inset: auto 0 -1px; height: 1px; background: linear-gradient(90deg, transparent 8%, color-mix(in srgb, var(--amber) 38%, transparent), color-mix(in srgb, var(--sapphire) 38%, transparent), transparent 92%); opacity: 0.55; pointer-events: none; }
-  .inner { max-width: 76rem; min-height: 3.55rem; margin: 0 auto; padding: 0.5rem 16px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .site { position: sticky; top: 0; z-index: 10; padding-top: 0.7rem; }
+  .inner { position: relative; max-width: 76rem; width: calc(100% - 2rem); min-height: 3.55rem; margin: 0 auto; padding: 0.5rem 0.65rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; overflow: hidden; border: 1px solid color-mix(in srgb, var(--line) 88%, transparent); border-radius: 12px; background: color-mix(in srgb, var(--panel) 86%, transparent); box-shadow: 0 16px 40px rgb(0 0 0 / 0.28), 0 1px 0 rgb(255 255 255 / 0.04) inset; backdrop-filter: blur(22px) saturate(1.15); }
+  .inner::before { content: ''; position: absolute; inset: -1px 12% auto; height: 1px; background: linear-gradient(90deg, transparent, var(--amber), var(--sapphire), transparent); opacity: 0.8; pointer-events: none; }
   .brand { display: inline-flex; align-items: center; gap: 0.55rem; font-family: var(--body); font-weight: 700; font-size: 1rem; letter-spacing: -0.02em; text-decoration: none; }
-  .brand svg { width: 1.35rem; height: 1.35rem; transition: transform var(--duration-fast) var(--ease-out); }
+  .brand svg { width: 1.7rem; height: 1.7rem; padding: 0.18rem; border: 1px solid var(--line); border-radius: 7px; background: linear-gradient(135deg, color-mix(in srgb, var(--amber) 10%, var(--panel-2)), color-mix(in srgb, var(--sapphire) 12%, var(--panel-2))); transition: transform var(--duration-fast) var(--ease-out); }
   .brand:hover svg { transform: rotate(8deg); }
   .nav-toggle { display: none; width: 2.35rem; height: 2.35rem; place-items: center; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); cursor: pointer; }
   nav { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 0.25rem; }
   nav a { position: relative; padding: 0.42rem 0.65rem; border-radius: 6px; text-decoration: none; color: var(--muted); font-weight: 500; font-size: 0.82rem; transition: color var(--duration-fast) ease, background var(--duration-fast) ease; }
   nav a::after { content: ''; position: absolute; right: 0.7rem; bottom: 0.2rem; left: 0.7rem; height: 2px; border-radius: 2px; background: linear-gradient(90deg, var(--amber), var(--sapphire)); transform: scaleX(0); transition: transform var(--duration-fast) var(--ease-out); }
   nav a:hover { color: var(--fg); background: rgb(255 255 255 / 0.035); }
-  nav a[aria-current='page'] { color: var(--fg); background: rgb(255 255 255 / 0.04); }
+  nav a[aria-current='page'] { color: var(--fg); background: linear-gradient(135deg, color-mix(in srgb, var(--amber) 7%, transparent), color-mix(in srgb, var(--sapphire) 9%, transparent)); box-shadow: 0 0 0 1px rgb(255 255 255 / 0.035) inset; }
   nav a[aria-current='page']::after { transform: scaleX(1); }
-  main { max-width: 76rem; margin: 0 auto; padding: 1.75rem 16px 4rem; }
+  main { max-width: 76rem; margin: 0 auto; padding: 2.25rem 16px 4rem; }
   .route { animation: route-in var(--duration-page) var(--ease-out) both; }
   @keyframes route-in {
     from { opacity: 0; transform: translateY(0.6rem); }
     to { opacity: 1; transform: none; }
   }
   @media (max-width: 44rem) {
-    .inner { position: relative; }
+    .inner { overflow: visible; }
     .nav-toggle { display: grid; }
-    nav { position: absolute; top: calc(100% + 0.35rem); right: 16px; left: 16px; display: none; padding: 0.45rem; border: 1px solid var(--line); border-radius: 8px; background: color-mix(in srgb, var(--panel) 96%, transparent); box-shadow: 0 18px 42px rgb(0 0 0 / 0.42); backdrop-filter: blur(18px); }
+    nav { position: absolute; top: calc(100% + 0.45rem); right: 0; left: 0; display: none; padding: 0.45rem; border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--panel) 96%, transparent); box-shadow: 0 18px 42px rgb(0 0 0 / 0.42); backdrop-filter: blur(18px); }
     nav.open { display: grid; animation: menu-in var(--duration-fast) var(--ease-out) both; }
     nav a { width: 100%; padding: 0.7rem 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     nav a::after { right: auto; bottom: 0.35rem; left: 0.75rem; width: 2rem; }

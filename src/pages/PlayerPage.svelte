@@ -9,6 +9,10 @@
   const load = $derived(getPlayer(name))
   const percent = (value: number) => `${Math.round(value * 100)}%`
   const matchKda = (match: RecentPlayerMatch) => (match.kills + match.assists) / Math.max(match.deaths, 1)
+  const impactLabel = (value: number) => {
+    const rounded = Math.abs(value) < 0.05 ? 0 : value
+    return `${rounded > 0 ? '+' : ''}${rounded.toFixed(1)}`
+  }
   const shortDate = (unix: number) => new Date(unix * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 </script>
 
@@ -30,6 +34,11 @@
         <article class="panel stat"><span class="label">KDR</span><strong>{player.kdr.toFixed(2)}</strong><span class="sub">kills / deaths</span></article>
         <article class="panel stat"><span class="label">KDA</span><strong>{player.kda.toFixed(2)}</strong><span class="sub">kills + assists / deaths</span></article>
         <article class="panel stat"><span class="label">Win rate</span><strong>{percent(player.win_rate)}</strong><span class="sub">match victories</span></article>
+        <article class="panel stat impact-stat">
+          <span class="label">Average impact</span>
+          <strong class:positive={player.average_impact_score > 0} class:negative={player.average_impact_score < 0}>{impactLabel(player.average_impact_score)}</strong>
+          <span class="sub">{player.impact_score_matches} matches · v{player.impact_score_version} · 0 is lobby average</span>
+        </article>
       </div>
     </section>
 
@@ -80,12 +89,28 @@
           </div>
           <p class="chart-note">KDA is (kills + assists) ÷ deaths; a zero-death match uses one as the divisor.</p>
         </figure>
+        <figure class="impact-chart">
+          <figcaption><span class="label">Impact score by match</span><span class="hint">−5 to +5 · 0 is lobby average</span></figcaption>
+          <div class="trend-scroll">
+            <ol class="impact-trend">
+              {#each trend as match (match.uuid)}
+                {@const impact = match.impact_score}
+                {@const won = match.team === match.winning_team}
+                <li class:positive={impact > 0} class:negative={impact < 0} title="Match {match.match_id}: {impactLabel(impact)} impact · {won ? 'Win' : 'Loss'}">
+                  <span class="trend-value num">{impactLabel(impact)}</span>
+                  <span class="impact-bar"><i class:positive={impact > 0} class:negative={impact < 0} style:--height="{`${Math.abs(impact) / 5 * 50}%`}"></i></span>
+                  <span class="trend-meta"><span class:win={won} class:loss={!won}>{won ? 'W' : 'L'}</span><span>{shortDate(match.start_time)}</span></span>
+                </li>
+              {/each}
+            </ol>
+          </div>
+        </figure>
       {:else}
         <p class="empty">No recent matches to chart yet.</p>
       {/if}
       <div class="scroll-x">
         <table class="num">
-          <thead><tr><th>Result</th><th>Match</th><th>Hero</th><th>K/D/A</th><th>KDA</th><th>Length</th><th>Date</th></tr></thead>
+          <thead><tr><th>Result</th><th>Match</th><th>Hero</th><th>K/D/A</th><th>KDA</th><th>Impact</th><th>Length</th><th>Date</th></tr></thead>
           <tbody>
             {#each player.recent as match (match.uuid)}
               <tr>
@@ -94,11 +119,12 @@
                 <td class="hero-cell"><HeroIcon hero={match.hero} team={match.team} size={26} />{match.hero.name}</td>
                 <td>{match.kills}/{match.deaths}/{match.assists}</td>
                 <td>{matchKda(match).toFixed(2)}</td>
+                <td class:positive={match.impact_score > 0} class:negative={match.impact_score < 0}>{impactLabel(match.impact_score)}</td>
                 <td>{mmss(match.duration_s)}</td>
                 <td title={when(match.start_time)}>{ago(match.start_time)}</td>
               </tr>
             {:else}
-              <tr><td colspan="7" class="empty">No recent matches found.</td></tr>
+              <tr><td colspan="8" class="empty">No recent matches found.</td></tr>
             {/each}
           </tbody>
         </table>
@@ -122,6 +148,8 @@
   .stat { display: grid; gap: 0.1rem; }
   .stat strong { font-family: var(--display); font-size: 2rem; line-height: 1.1; }
   .stat .sub { font-size: 0.75rem; }
+  .impact-stat strong.positive, .positive { color: var(--good); }
+  .impact-stat strong.negative, .negative { color: var(--bad); }
   .heroes { display: grid; gap: 0.65rem; }
   .hero-row { display: grid; grid-template-columns: 2rem 10rem 5rem minmax(5rem, 1fr); gap: 0.7rem; align-items: center; }
   .hero-name { font-weight: 600; }
@@ -140,7 +168,17 @@
   .trend li.win .trend-meta span:first-child { color: var(--good); font-weight: 700; }
   .trend li.loss .trend-meta span:first-child { color: var(--bad); font-weight: 700; }
   .chart-note { color: var(--faint); font-size: 0.72rem; }
-  table { width: 100%; border-collapse: collapse; min-width: 38rem; font-size: 0.9rem; }
+  .impact-chart { display: grid; gap: 0.45rem; margin: 0 0 1rem; }
+  .impact-chart figcaption { display: flex; align-items: baseline; gap: 0.75rem; }
+  .impact-trend { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(3.25rem, 1fr); align-items: end; gap: 0.35rem; min-width: 100%; min-height: 7.5rem; margin: 0; padding: 0.5rem 0 0; list-style: none; }
+  .impact-trend li { display: grid; grid-template-rows: auto 4.5rem auto; justify-items: center; gap: 0.2rem; min-width: 0; }
+  .impact-bar { position: relative; width: min(1.4rem, 70%); height: 100%; background: linear-gradient(to bottom, transparent calc(50% - 0.5px), var(--line) calc(50% - 0.5px), var(--line) calc(50% + 0.5px), transparent calc(50% + 0.5px)); }
+  .impact-bar i { position: absolute; left: 0; width: 100%; height: var(--height); background: var(--muted); }
+  .impact-bar i.positive { bottom: 50%; background: var(--good); }
+  .impact-bar i.negative { top: 50%; background: var(--bad); }
+  .impact-trend .trend-meta .win { color: var(--good); font-weight: 700; }
+  .impact-trend .trend-meta .loss { color: var(--bad); font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; min-width: 43rem; font-size: 0.9rem; }
   th, td { padding: 0.5rem 0.6rem; text-align: right; white-space: nowrap; border-top: 1px solid var(--line); }
   th { border-top: 0; color: var(--muted); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; }
   th:first-child, td:first-child, .hero-cell { text-align: left; }

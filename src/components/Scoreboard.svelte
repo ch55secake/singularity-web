@@ -6,6 +6,10 @@
   let { match, focus = $bindable() }: { match: MatchDetail; focus: number | null } = $props()
 
   const minutes = $derived(match.duration_s / 60)
+  const impactValue = (value: number) => {
+    const rounded = Math.abs(value) < 0.05 ? 0 : value
+    return `${rounded > 0 ? '+' : ''}${rounded.toFixed(1)}`
+  }
   type Col = { key: string; label: string; title: string; value: (p: Player) => number; show: (p: Player) => string; best?: 'max' | 'min' }
   const cols: Col[] = [
     { key: 'k', label: 'K', title: 'Kills', value: (p) => p.kills, show: (p) => String(p.kills), best: 'max' },
@@ -19,6 +23,7 @@
     { key: 'heal', label: 'Healing', title: 'Healing done', value: (p) => p.healing, show: (p) => fmt(p.healing), best: 'max' },
     { key: 'lh', label: 'LH', title: 'Last hits', value: (p) => p.last_hits, show: (p) => String(p.last_hits), best: 'max' },
     { key: 'acc', label: 'Acc', title: 'Shots hit', value: (p) => pct(p.aim.shots_hit, p.aim.shots_hit + p.aim.shots_missed), show: (p) => `${Math.round(pct(p.aim.shots_hit, p.aim.shots_hit + p.aim.shots_missed))}%`, best: 'max' },
+    { key: 'impact', label: 'Impact', title: 'Lobby-relative impact score, from -5 to +5; zero is average', value: (p) => p.impact.score, show: (p) => impactValue(p.impact.score), best: 'max' },
   ]
 
   const bests = $derived(Object.fromEntries(cols.map((c) => {
@@ -56,7 +61,10 @@
                 </button>
               </td>
               {#each cols as c}
-                <td class:best={c.value(p) === bests[c.key]}>{c.show(p)}</td>
+                <td class:best={c.value(p) === bests[c.key]}
+                  class:positive={c.key === 'impact' && p.impact.score > 0}
+                  class:negative={c.key === 'impact' && p.impact.score < 0}
+                  title={c.key === 'impact' ? `Combat ${impactValue(p.impact.combat)} · Economy ${impactValue(p.impact.economy)} · Utility ${impactValue(p.impact.utility)} · Survival ${impactValue(p.impact.survival)} · v${match.impact_score_version}` : undefined}>{c.show(p)}</td>
               {/each}
             </tr>
           {/each}
@@ -80,6 +88,8 @@
   tr.focus { background: var(--panel-2); box-shadow: inset 3px 0 0 var(--team); }
   td { color: var(--muted); }
   td.best { color: var(--fg); font-weight: 700; }
+  td.positive { color: var(--good); }
+  td.negative { color: var(--bad); }
   .who-btn { display: flex; align-items: center; gap: 0.65rem; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
   .names { display: grid; line-height: 1.2; }
   .hero { color: var(--fg); font-weight: 600; }

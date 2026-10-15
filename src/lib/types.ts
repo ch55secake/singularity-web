@@ -103,6 +103,7 @@ export interface PlayerHeroAverage {
   id: number;
   name: string;
   matches: number;
+  icon: string | null;
 }
 
 export interface RecentPlayerMatch {

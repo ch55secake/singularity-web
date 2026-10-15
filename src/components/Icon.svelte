@@ -1,5 +1,5 @@
 <script lang="ts">
-  export type IconName = 'alert' | 'arrow-right' | 'check' | 'chevron-left' | 'chevron-right' | 'close' | 'copy' | 'inbox' | 'info' | 'menu' | 'pause' | 'play' | 'retry'
+  export type IconName = 'alert' | 'arrow-right' | 'check' | 'chevron-left' | 'chevron-right' | 'close' | 'copy' | 'inbox' | 'info' | 'matches' | 'menu' | 'pause' | 'play' | 'players' | 'retry' | 'search' | 'sessions'
   let { name, size = 18, label }: { name: IconName; size?: number; label?: string } = $props()
 </script>
 
@@ -24,11 +24,19 @@
     <circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>
   {:else if name === 'menu'}
     <path d="M4 7h16M4 12h16M4 17h16"/>
+  {:else if name === 'matches'}
+    <path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1" fill="currentColor" stroke="none"/>
   {:else if name === 'pause'}
     <path d="M9 7v10M15 7v10"/>
   {:else if name === 'play'}
     <path d="m9 7 8 5-8 5V7Z" fill="currentColor" stroke="none"/>
+  {:else if name === 'players'}
+    <circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 5.5a3 3 0 0 1 0 5.8M16.5 14a5 5 0 0 1 4 5"/>
   {:else if name === 'retry'}
     <path d="M20 7v5h-5"/><path d="M19 12a7 7 0 1 0-2 5"/>
+  {:else if name === 'search'}
+    <circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>
+  {:else if name === 'sessions'}
+    <rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M7 14h3M14 14h3M7 18h3"/>
   {/if}
 </svg>

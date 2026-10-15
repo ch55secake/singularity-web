@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getPlayer } from '../lib/api'
-  import { ago, mmss, when } from '../lib/format'
+  import { ago, fmt, mmss, when } from '../lib/format'
   import HeroIcon from '../components/HeroIcon.svelte'
 
   let { name }: { name: string } = $props()
@@ -21,12 +21,22 @@
       <p>{player.matches} matches in the group’s recent history.</p>
     </header>
 
-    <section class="stats" aria-label="Player averages">
-      <article class="panel stat"><span class="label">KDR</span><strong>{player.kdr.toFixed(2)}</strong><span class="sub">kills / deaths</span></article>
-      <article class="panel stat"><span class="label">KDA</span><strong>{player.kda.toFixed(2)}</strong><span class="sub">kills + assists / deaths</span></article>
-      <article class="panel stat"><span class="label">Accuracy</span><strong>{percent(player.accuracy)}</strong><span class="sub">shots hit</span></article>
-      <article class="panel stat"><span class="label">Crit rate</span><strong>{percent(player.crit_rate)}</strong><span class="sub">hero bullets</span></article>
-      <article class="panel stat"><span class="label">Win rate</span><strong>{percent(player.win_rate)}</strong><span class="sub">match victories</span></article>
+    <section class="metric-group" aria-labelledby="performance-heading">
+      <h2 id="performance-heading">Match performance</h2>
+      <div class="stats">
+        <article class="panel stat"><span class="label">KDR</span><strong>{player.kdr.toFixed(2)}</strong><span class="sub">kills / deaths</span></article>
+        <article class="panel stat"><span class="label">KDA</span><strong>{player.kda.toFixed(2)}</strong><span class="sub">kills + assists / deaths</span></article>
+        <article class="panel stat"><span class="label">Win rate</span><strong>{percent(player.win_rate)}</strong><span class="sub">match victories</span></article>
+      </div>
+    </section>
+
+    <section class="metric-group" aria-labelledby="combat-heading">
+      <h2 id="combat-heading">Combat averages</h2>
+      <div class="stats">
+        <article class="panel stat"><span class="label">Accuracy</span><strong>{percent(player.accuracy)}</strong><span class="sub">shots hit</span></article>
+        <article class="panel stat"><span class="label">Crit rate</span><strong>{percent(player.crit_rate)}</strong><span class="sub">hero bullets</span></article>
+        <article class="panel stat"><span class="label">Damage / min</span><strong>{fmt(Math.round(player.damage_per_minute))}</strong><span class="sub">hero damage per minute</span></article>
+      </div>
     </section>
 
     <section class="panel">
@@ -79,7 +89,9 @@
   .intro p, .hint, .sub { color: var(--muted); }
   .back { color: var(--muted); font-size: 0.85rem; text-decoration: none; }
   .back:hover { color: var(--fg); }
-  .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.6rem; }
+  .metric-group { display: grid; gap: 0.5rem; }
+  .metric-group h2 { font-family: var(--display); font-size: 1.2rem; letter-spacing: 0.02em; text-transform: uppercase; }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
   .stat { display: grid; gap: 0.1rem; }
   .stat strong { font-family: var(--display); font-size: 2rem; line-height: 1.1; }
   .stat .sub { font-size: 0.75rem; }

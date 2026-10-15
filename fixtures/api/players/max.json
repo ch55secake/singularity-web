@@ -6,6 +6,7 @@
   "accuracy": 0.483,
   "crit_rate": 0.138,
   "win_rate": 1,
+  "damage_per_minute": 1361.6230366492146,
   "heroes": [{ "id": 15, "name": "Bebop", "matches": 1 }],
   "recent": [{
     "uuid": "37bb05cc-27d5-5ae8-8c28-129dd11cd85c",

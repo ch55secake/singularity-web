@@ -86,7 +86,7 @@ $effect(() => {
     <div class="sidebar-head">
       <a class="brand" href="/">
         <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="var(--amber)" stroke-width="3"/><circle cx="16" cy="16" r="3.5" fill="var(--sapphire)"/></svg>
-        <span><strong>Singularity</strong><small>Match intelligence</small></span>
+        <span><strong>Singularity</strong></span>
       </a>
       <button class="sidebar-close" type="button" aria-label="Close navigation" onclick={() => (navOpen = false)}><Icon name="close" size={18} /></button>
     </div>
@@ -170,7 +170,6 @@ $effect(() => {
   .brand svg { width: 2rem; height: 2rem; flex: none; padding: 0.2rem; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(135deg, color-mix(in srgb, var(--amber) 11%, var(--panel-2)), color-mix(in srgb, var(--sapphire) 13%, var(--panel-2))); }
   .brand > span { display: grid; min-width: 0; line-height: 1.2; }
   .brand strong { font-size: 0.9rem; letter-spacing: -0.025em; }
-  .brand small { color: var(--faint); font-size: 0.64rem; }
   .sidebar-close { display: none; }
   .side-nav { display: grid; align-content: start; gap: 0.2rem; }
   .nav-label { padding: 0.65rem 0.65rem 0.3rem; color: var(--faint); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }

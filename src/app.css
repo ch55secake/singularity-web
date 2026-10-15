@@ -87,7 +87,7 @@ p { margin: 0; }
   border: 1px solid var(--line);
   border-radius: 7px;
   background: color-mix(in srgb, var(--panel) 92%, transparent);
-  box-shadow: 0 -1rem 2rem -1.8rem var(--sapphire) inset, -1rem 0 2rem -1.8rem var(--sapphire) inset;
+  overscroll-behavior: contain;
 }
 .data-scroll:focus-visible { outline-offset: 3px; }
 

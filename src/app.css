@@ -90,6 +90,10 @@ p { margin: 0; }
   overscroll-behavior: contain;
 }
 .data-scroll:focus-visible { outline-offset: 3px; }
+.breadcrumb { display: flex; align-items: center; gap: 0.35rem; min-width: 0; color: var(--muted); font-size: 0.8rem; }
+.breadcrumb a { text-decoration: none; transition: color var(--duration-fast) ease; }
+.breadcrumb a:hover { color: var(--fg); }
+.breadcrumb .current { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }

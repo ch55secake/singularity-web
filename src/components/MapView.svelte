@@ -2,6 +2,7 @@
   import { onDestroy } from 'svelte'
   import HeroIcon from './HeroIcon.svelte'
   import PlayerPicker from './PlayerPicker.svelte'
+  import Icon from './Icon.svelte'
   import { mmss } from '../lib/format'
   import type { MatchDetail, ObjectiveEvent, Player } from '../lib/types'
 
@@ -276,7 +277,7 @@
         {#if imgFailed}<p class="imgnote">Map image didn’t load, so positions are shown on a blank map.</p>{/if}
       </div>
       <div class="controls">
-        <button class="play" onclick={toggle} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : '▶'}</button>
+        <button class="play" onclick={toggle} aria-label={playing ? 'Pause' : 'Play'}><Icon name={playing ? 'pause' : 'play'} size={16} /></button>
         <input type="range" id="map-time" min="0" max={tmax} step="1" bind:value={t} oninput={() => (playing = false)} aria-label="Match time" />
         <span class="time num">{mmss(t)} / {mmss(tmax)}</span>
         <label class="speed">Speed
@@ -305,7 +306,7 @@
               {#if d.kind === 'kill'}
                 {#if d.killer}<HeroIcon hero={d.killer.hero} team={d.killer.team} size={22} />{/if}
                 <span class="kn">{name(d.killer)}</span>
-                <span class="arrow">→</span>
+                <span class="arrow"><Icon name="arrow-right" size={13} /></span>
                 {#if d.victim}<HeroIcon hero={d.victim.hero} team={d.victim.team} size={22} />{/if}
                 <span class="kn">{name(d.victim)}</span>
               {:else if d.kind === 'purchase'}
@@ -320,7 +321,7 @@
             </button>
           </li>
         {:else}
-          <li class="empty">No key moments yet. Select a player above to include item purchases.</li>
+          <li class="empty"><Icon name="inbox" size={18} />No key moments yet. Select a player above to include item purchases.</li>
         {/each}
       </ol>
     </aside>
@@ -334,7 +335,7 @@
   canvas { display: block; border-radius: 6px; }
   .imgnote { position: absolute; left: 0.75rem; bottom: 0.75rem; font-size: 0.8rem; color: var(--muted); }
   .controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; max-width: 44rem; }
-  .play { width: 2.4rem; height: 2.4rem; border-radius: 50%; border: 1px solid var(--line); background: linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 84%, white), var(--panel-2)); box-shadow: 0 1px 0 rgb(255 255 255 / 0.035) inset; cursor: pointer; font-size: 0.85rem; transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out); }
+  .play { width: 2.4rem; height: 2.4rem; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 84%, white), var(--panel-2)); box-shadow: 0 1px 0 rgb(255 255 255 / 0.035) inset; cursor: pointer; font-size: 0.85rem; transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out); }
   .play:hover { border-color: var(--faint); background: color-mix(in srgb, var(--panel-2) 92%, var(--sapphire)); transform: scale(1.04); }
   .play:active { transform: scale(0.98); }
   input[type='range'] { flex: 1; min-width: 10rem; accent-color: var(--fg); }
@@ -356,6 +357,6 @@
   .kn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
   .arrow { color: var(--faint); }
   .event-kind { flex: none; color: var(--amber); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.05em; }
-  .empty { color: var(--muted); font-size: 0.85rem; padding: 0.4rem; }
+  .empty { display: flex; align-items: center; gap: 0.5rem; color: var(--muted); font-size: 0.85rem; padding: 0.65rem; border: 1px dashed var(--line); border-radius: 6px; }
   @media (max-width: 60rem) { .layout { grid-template-columns: 1fr; } .feed ol { max-height: 18rem; } }
 </style>

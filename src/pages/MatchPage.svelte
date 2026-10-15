@@ -9,6 +9,7 @@
   import BuildTimeline from '../components/BuildTimeline.svelte'
   import MapView from '../components/MapView.svelte'
   import PlayerPicker from '../components/PlayerPicker.svelte'
+  import HeroIcon from '../components/HeroIcon.svelte'
   import type { MatchDetail } from '../lib/types'
 
   let { uuid }: { uuid: string } = $props()
@@ -24,6 +25,26 @@
   let match = $state<MatchDetail | null>(null)
   let error = $state<string | null>(null)
   let focus = $state<number | null>(null)
+  const focusedPlayer = $derived(match?.players.find((p) => p.slot === focus) ?? null)
+
+  function selectTab(id: string) {
+    setHash(id === 'overview' ? '' : id)
+  }
+
+  function onTabKeydown(event: KeyboardEvent) {
+    const currentIndex = TABS.findIndex((t) => t.id === tab)
+    let nextIndex: number | null = null
+    if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % TABS.length
+    if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + TABS.length) % TABS.length
+    if (event.key === 'Home') nextIndex = 0
+    if (event.key === 'End') nextIndex = TABS.length - 1
+    if (nextIndex === null) return
+
+    event.preventDefault()
+    const nextTab = TABS[nextIndex]
+    selectTab(nextTab.id)
+    document.getElementById(`match-tab-${nextTab.id}`)?.focus()
+  }
 
   $effect(() => {
     getMatch(uuid).then(
@@ -77,29 +98,40 @@
       </div>
     </header>
 
-    <nav class="tabs" aria-label="Match sections">
+    <div class="tabs" role="tablist" aria-label="Match sections" tabindex="-1" onkeydown={onTabKeydown}>
       {#each TABS as t}
-        <button class:active={tab === t.id} aria-pressed={tab === t.id} onclick={() => setHash(t.id === 'overview' ? '' : t.id)}>{t.label}</button>
+        <button id="match-tab-{t.id}" type="button" role="tab" aria-selected={tab === t.id} aria-controls="match-tabpanel" tabindex={tab === t.id ? 0 : -1} class:active={tab === t.id} onclick={() => selectTab(t.id)}>{t.label}</button>
       {/each}
-    </nav>
+    </div>
 
-    {#if tab === 'overview'}
-      <Scoreboard {match} bind:focus />
-      <SoulsAdvantage {match} />
-    {:else if tab === 'combat'}
-      <AimTable {match} bind:focus />
-      <section class="panel">
-        <div class="panel-head"><h2>Damage breakdown</h2><PlayerPicker players={match.players} bind:focus /></div>
-        <DamageBreakdown {match} {focus} />
-      </section>
-    {:else if tab === 'map'}
-      <MapView {match} bind:focus />
-    {:else if tab === 'builds'}
-      <section class="panel">
-        <div class="panel-head"><h2>Build order</h2><PlayerPicker players={match.players} bind:focus /></div>
-        <BuildTimeline {match} {focus} />
-      </section>
-    {/if}
+    <div class="tab-context" aria-live="polite">
+      <span class="label">Following</span>
+      {#if focusedPlayer}
+        <HeroIcon hero={focusedPlayer.hero} team={focusedPlayer.team} size={28} />
+        <strong>{focusedPlayer.member?.name ?? focusedPlayer.hero.name}</strong>
+        {#if focusedPlayer.member}<span class="sub">{focusedPlayer.hero.name}</span>{/if}
+      {/if}
+    </div>
+
+    <div id="match-tabpanel" role="tabpanel" aria-labelledby="match-tab-{tab}" tabindex="0">
+      {#if tab === 'overview'}
+        <Scoreboard {match} bind:focus />
+        <SoulsAdvantage {match} />
+      {:else if tab === 'combat'}
+        <AimTable {match} bind:focus />
+        <section class="panel">
+          <div class="panel-head"><h2>Damage breakdown</h2><PlayerPicker players={match.players} bind:focus /></div>
+          <DamageBreakdown {match} {focus} />
+        </section>
+      {:else if tab === 'map'}
+        <MapView {match} bind:focus />
+      {:else if tab === 'builds'}
+        <section class="panel">
+          <div class="panel-head"><h2>Build order</h2><PlayerPicker players={match.players} bind:focus /></div>
+          <BuildTimeline {match} {focus} />
+        </section>
+      {/if}
+    </div>
   </div>
 {/if}
 
@@ -126,6 +158,11 @@
   .tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 0.6rem 0.9rem; font-weight: 600; color: var(--muted); cursor: pointer; white-space: nowrap; }
   .tabs button:hover { color: var(--fg); }
   .tabs button.active { color: var(--fg); border-bottom-color: var(--fg); }
+  .tabs button:focus-visible { outline-offset: -2px; }
+  .tab-context { display: flex; align-items: center; gap: 0.55rem; min-height: 2.25rem; color: var(--fg); }
+  .tab-context strong { font-size: 0.9rem; }
+  #match-tabpanel { display: grid; gap: 1rem; min-width: 0; }
+  #match-tabpanel:focus-visible { outline: 2px solid var(--sapphire); outline-offset: 3px; border-radius: var(--radius); }
   @media (max-width: 40rem) {
     .hero { grid-template-columns: 1fr 1fr; }
     .centre { grid-column: 1 / -1; order: -1; }

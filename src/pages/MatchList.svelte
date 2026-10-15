@@ -187,7 +187,7 @@
   .intro p, .sub { color: var(--muted); }
   .state { display: grid; gap: 0.4rem; color: var(--muted); }
   .state h2 { color: var(--fg); font-size: 1.1rem; }
-  .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 0.65rem 0.9rem; }
+  .toolbar { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 0.65rem 0.9rem; }
   .toolbar > label, .member-filter { color: var(--muted); font-size: 0.82rem; }
   .member-filter { display: grid; gap: 0.25rem; margin: 0; padding: 0; border: 0; }
   .member-filter legend { padding: 0; }

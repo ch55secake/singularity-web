@@ -16,7 +16,7 @@
 <div class="page">
   <header class="intro">
     <h1>Matches</h1>
-    <p>Every Deadlock match the group’s ingest apps have sent to rake, newest first.</p>
+    <p>Recent Deadlock matches captured by the group.</p>
   </header>
 
   {#await load}
@@ -52,17 +52,22 @@
       <ol class="list">
         {#each matches.filter(includesPlayer) as m (m.uuid)}
           {@const ours = members(m)}
+          {@const groupWins = ours.filter((p) => p.team === m.winning_team).length}
+          {@const groupResult = ours.length === 0 ? 'No group' : groupWins === ours.length ? 'Group win' : groupWins === 0 ? 'Group loss' : 'Split' }
           <li>
             <a class="row panel" href="/m/{m.uuid}">
               <div class="meta">
-                <span class="mode">{m.mode}</span>
-                <span class="label">{ago(m.start_time)}</span>
-                <span class="sub num" title={when(m.start_time)}>{mmss(m.duration_s)}</span>
+                <div class="meta-top">
+                  <span class="mode">{m.mode}</span>
+                  <span class="result" class:win={ours.length > 0 && groupWins === ours.length} class:loss={ours.length > 0 && groupWins === 0} class:split={groupWins > 0 && groupWins < ours.length}>{groupResult}</span>
+                </div>
+                <span class="date" title={when(m.start_time)}>{ago(m.start_time)}</span>
+                <span class="sub num">{mmss(m.duration_s)} · Match {m.match_id}</span>
               </div>
               <div class="teams">
                 {#each [0, 1] as const as t}
                   <div class="team team-{t}" class:won={m.winning_team === t}>
-                    <span class="tname">{TEAMS[t].short}{m.winning_team === t ? ' · won' : ''}</span>
+                    <span class="tname">{TEAMS[t].short}<span class="team-score num">{m.players.filter((p) => p.team === t).reduce((sum, p) => sum + p.kills, 0)}</span>{#if m.winning_team === t}<span class="winner">WIN</span>{/if}</span>
                     <span class="heroes">
                       {#each m.players.filter((p) => p.team === t) as p (p.slot)}
                         <HeroIcon hero={p.hero} team={t} size={30} />
@@ -113,12 +118,20 @@
     text-decoration: none; transition: border-color 0.15s, background 0.15s;
   }
   .row:hover { border-color: var(--faint); background: var(--panel-2); }
-  .meta { display: grid; gap: 0.1rem; }
+  .meta { display: grid; align-content: center; gap: 0.3rem; }
+  .meta-top { display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; }
   .mode { font-family: var(--display); font-weight: 800; font-size: 1.6rem; line-height: 1; }
+  .result { border: 1px solid var(--line); border-radius: 99px; padding: 0.08rem 0.45rem; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  .result.win { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, var(--line)); }
+  .result.loss { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 45%, var(--line)); }
+  .result.split { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 45%, var(--line)); }
+  .date { font-size: 0.9rem; font-weight: 600; }
   .teams { display: grid; gap: 0.4rem; min-width: 0; }
   .team { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
-  .tname { width: 7.5rem; flex: none; font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+  .tname { width: 8.5rem; flex: none; display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; font-weight: 600; color: var(--muted); }
   .team.won .tname { color: var(--team); }
+  .team-score { margin-left: auto; font-size: 0.95rem; color: var(--fg); }
+  .winner { border-radius: 3px; padding: 0.05rem 0.25rem; color: var(--team); background: color-mix(in srgb, var(--team) 12%, transparent); font-size: 0.57rem; letter-spacing: 0.06em; }
   .heroes { display: flex; gap: 4px; flex-wrap: wrap; }
   .ours { display: grid; gap: 0.35rem; font-size: 0.9rem; min-width: 0; }
   .member { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.6rem; }

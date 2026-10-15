@@ -4,9 +4,11 @@ import MatchList from './pages/MatchList.svelte'
 import MatchPage from './pages/MatchPage.svelte'
 import PlayersPage from './pages/PlayersPage.svelte'
 import PlayerPage from './pages/PlayerPage.svelte'
+import SessionsPage from './pages/SessionsPage.svelte'
 
 const matchUuid = $derived(route.path.match(/^\/m\/([0-9a-f-]{36})\/?$/i)?.[1])
 const playersPage = $derived(/^\/players\/?$/.test(route.path))
+const sessionsPage = $derived(/^\/sessions\/?$/.test(route.path))
 const playerPath = $derived(route.path.match(/^\/p\/([^/]+)\/?$/)?.[1])
 const playerName = $derived(playerPath ? decodeURIComponent(playerPath) : null)
 </script>
@@ -19,6 +21,7 @@ const playerName = $derived(playerPath ? decodeURIComponent(playerPath) : null)
     </a>
     <nav aria-label="Primary navigation">
       <a href="/" aria-current={route.path === '/' ? 'page' : undefined}>Matches</a>
+      <a href="/sessions" aria-current={sessionsPage ? 'page' : undefined}>Sessions</a>
       <a href="/players" aria-current={playersPage ? 'page' : undefined}>Players</a>
       {#if playerName}<a href="/p/{encodeURIComponent(playerName)}" aria-current="page">{playerName}</a>{/if}
     </nav>
@@ -28,6 +31,8 @@ const playerName = $derived(playerPath ? decodeURIComponent(playerPath) : null)
 <main>
   {#if route.path === '/'}
     <MatchList />
+  {:else if sessionsPage}
+    <SessionsPage />
   {:else if matchUuid}
     {#key matchUuid}<MatchPage uuid={matchUuid} />{/key}
   {:else if playersPage}

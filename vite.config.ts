@@ -30,6 +30,18 @@ function fixtureApi(): Plugin {
           }
           return
         }
+        if (url === '/api/sessions' || url === '/api/sessions/') {
+          try {
+            const body = await readFile(join(root, 'sessions.json'))
+            res.setHeader('Content-Type', 'application/json')
+            res.end(body)
+          } catch {
+            res.statusCode = 404
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: 'sessions not found' }))
+          }
+          return
+        }
         const m = url.match(/^\/api\/matches(?:\/([0-9a-f-]{36}))?\/?$/)
         if (!m) return next()
         const file = m[1] ? join(root, 'matches', `${m[1]}.json`) : join(root, 'matches.json')

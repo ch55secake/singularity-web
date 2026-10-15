@@ -41,6 +41,30 @@ export interface MatchSummary {
   players: PlayerSummary[];
 }
 
+export interface SessionMatch {
+  uuid: string;
+  match_id: number;
+  start_time: number;
+  duration_s: number;
+  result: 'win' | 'loss' | 'split';
+  members: string[];
+  impact_score: number;
+}
+
+export interface MatchSession {
+  start_time: number;
+  end_time: number;
+  duration_s: number;
+  matches: SessionMatch[];
+  members: string[];
+  wins: number;
+  losses: number;
+  splits: number;
+  /** Wins divided by all matches, including splits in the denominator. */
+  win_rate: number;
+  impact_score: number;
+}
+
 export interface DamageSource {
   source: string;
   name: string;

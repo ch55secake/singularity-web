@@ -99,8 +99,10 @@
   .intro p, .sub { color: var(--muted); }
   .count { margin: 0; }
   .player-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); gap: 0.7rem; margin: 0; padding: 0; list-style: none; }
-  .player-card { display: grid; gap: 0.65rem; min-height: 8rem; text-decoration: none; transform: translateY(0); transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease, box-shadow var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out); }
-  .player-card:hover, .player-card:focus-visible { border-color: #3a3b42; background: var(--panel-2); box-shadow: none; transform: translateY(-1px); }
+  .player-card { position: relative; display: grid; gap: 0.65rem; min-height: 8rem; overflow: hidden; text-decoration: none; transform: translateY(0); transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease, box-shadow var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out); }
+  .player-card::before { content: ''; position: absolute; inset: -1px 14% auto; height: 1px; background: linear-gradient(90deg, transparent, var(--amber), var(--sapphire), transparent); opacity: 0; transition: opacity var(--duration-fast) ease; }
+  .player-card:hover, .player-card:focus-visible { border-color: #3b3d45; background: var(--panel-2); box-shadow: 0 18px 42px rgb(0 0 0 / 0.24); transform: translateY(-2px); }
+  .player-card:hover::before, .player-card:focus-visible::before { opacity: 0.85; }
   .player-card:active { transform: translateY(0) scale(0.995); }
   .card-heading, .stats { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
   .card-heading strong { color: var(--member); font-size: 1.1rem; }

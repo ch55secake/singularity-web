@@ -19,7 +19,6 @@
     "vite": "^6.3.5"
   },
   "dependencies": {
-    "@fontsource/big-shoulders-display": "5.2.5",
     "@fontsource/public-sans": "5.2.5"
   }
 }

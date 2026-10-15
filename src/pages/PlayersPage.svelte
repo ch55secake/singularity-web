@@ -100,7 +100,7 @@
   .count { margin: 0; }
   .player-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); gap: 0.7rem; margin: 0; padding: 0; list-style: none; }
   .player-card { display: grid; gap: 0.65rem; min-height: 8rem; text-decoration: none; transform: translateY(0); transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease, box-shadow var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out); }
-  .player-card:hover, .player-card:focus-visible { border-color: color-mix(in srgb, var(--member) 40%, var(--faint)); background: linear-gradient(145deg, color-mix(in srgb, var(--panel-2) 90%, var(--member)), var(--panel-2)); box-shadow: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 20px 48px rgb(0 0 0 / 0.3); transform: translateY(-2px); }
+  .player-card:hover, .player-card:focus-visible { border-color: #3a3b42; background: var(--panel-2); box-shadow: none; transform: translateY(-1px); }
   .player-card:active { transform: translateY(0) scale(0.995); }
   .card-heading, .stats { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
   .card-heading strong { color: var(--member); font-size: 1.1rem; }

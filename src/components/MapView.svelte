@@ -335,13 +335,13 @@
   canvas { display: block; border-radius: 6px; }
   .imgnote { position: absolute; left: 0.75rem; bottom: 0.75rem; font-size: 0.8rem; color: var(--muted); }
   .controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; max-width: 44rem; }
-  .play { width: 2.4rem; height: 2.4rem; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 84%, white), var(--panel-2)); box-shadow: 0 1px 0 rgb(255 255 255 / 0.035) inset; cursor: pointer; font-size: 0.85rem; transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out); }
+  .play { width: 2.4rem; height: 2.4rem; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: var(--panel-2); cursor: pointer; font-size: 0.85rem; transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out); }
   .play:hover { border-color: var(--faint); background: color-mix(in srgb, var(--panel-2) 92%, var(--sapphire)); transform: scale(1.04); }
   .play:active { transform: scale(0.98); }
   input[type='range'] { flex: 1; min-width: 10rem; accent-color: var(--fg); }
   .time { color: var(--muted); font-size: 0.85rem; min-width: 6.5rem; }
   .speed { font-size: 0.85rem; color: var(--muted); display: inline-flex; gap: 0.4rem; align-items: center; }
-  select { min-height: 2rem; background: linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 84%, white), var(--panel-2)); color: var(--fg); border: 1px solid var(--line); border-radius: 7px; padding: 0.25rem 0.45rem; box-shadow: 0 1px 0 rgb(255 255 255 / 0.035) inset; transition: border-color var(--duration-fast) ease; }
+  select { min-height: 2rem; background: var(--panel-2); color: var(--fg); border: 1px solid var(--line); border-radius: 7px; padding: 0.25rem 0.45rem; transition: border-color var(--duration-fast) ease; }
   select:hover { border-color: var(--faint); }
   input[type='checkbox'] { accent-color: var(--sapphire); }
   .toggles { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; font-size: 0.88rem; color: var(--muted); }

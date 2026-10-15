@@ -7,8 +7,17 @@
   let { name }: { name: string } = $props()
 
   const load = $derived(getPlayer(name))
+  type FormView = 'recent' | 'best' | 'worst'
+  let formView = $state<FormView>('recent')
   const percent = (value: number) => `${Math.round(value * 100)}%`
   const matchKda = (match: RecentPlayerMatch) => (match.kills + match.assists) / Math.max(match.deaths, 1)
+  const formMatches = (matches: RecentPlayerMatch[], view: FormView) => {
+    if (view === 'recent') return matches
+    return [...matches].sort((a, b) => {
+      const impactOrder = view === 'best' ? b.impact_score - a.impact_score : a.impact_score - b.impact_score
+      return impactOrder || b.start_time - a.start_time || b.match_id - a.match_id
+    })
+  }
   const impactLabel = (value: number) => {
     const rounded = Math.abs(value) < 0.05 ? 0 : value
     return `${rounded > 0 ? '+' : ''}${rounded.toFixed(1)}`
@@ -21,6 +30,9 @@
 {#await load}
   <p class="state">Loading player…</p>
 {:then player}
+  {@const selectedMatches = formMatches(player.recent, formView)}
+  {@const trend = formView === 'recent' ? [...selectedMatches].reverse() : selectedMatches}
+  {@const peakKda = Math.max(1, ...trend.map(matchKda))}
   <div class="page">
     <header class="intro">
       <a class="back" href="/">← All matches</a>
@@ -68,12 +80,24 @@
     </section>
 
     <section class="panel">
-      <div class="panel-head"><h2>Recent form</h2><span class="hint">Latest {player.recent.length} matches</span></div>
+      <div class="panel-head form-head">
+        <div class="form-title">
+          <h2>Recent form</h2>
+          <span class="hint">
+            {#if formView === 'recent'}Latest {player.recent.length} matches
+            {:else if formView === 'best'}Best impact scores · latest {player.recent.length} matches
+            {:else}Worst impact scores · latest {player.recent.length} matches{/if}
+          </span>
+        </div>
+        <div class="form-tabs" role="group" aria-label="Filter recent form games">
+          <button type="button" class:active={formView === 'recent'} aria-pressed={formView === 'recent'} onclick={() => (formView = 'recent')}>Recent</button>
+          <button type="button" class:active={formView === 'best'} aria-pressed={formView === 'best'} aria-label="Best games by impact score" onclick={() => (formView = 'best')}>Best</button>
+          <button type="button" class:active={formView === 'worst'} aria-pressed={formView === 'worst'} aria-label="Worst games by impact score" onclick={() => (formView = 'worst')}>Worst</button>
+        </div>
+      </div>
       {#if player.recent.length}
-        {@const trend = [...player.recent].reverse()}
-        {@const peakKda = Math.max(1, ...trend.map(matchKda))}
         <figure class="form-chart">
-          <figcaption><span class="label">KDA per match</span><span class="hint">Oldest → newest</span></figcaption>
+          <figcaption><span class="label">KDA per match</span><span class="hint">{formView === 'recent' ? 'Oldest → newest' : formView === 'best' ? 'Highest impact → lower' : 'Lowest impact → higher'}</span></figcaption>
           <div class="trend-scroll">
             <ol class="trend">
               {#each trend as match (match.uuid)}
@@ -90,7 +114,7 @@
           <p class="chart-note">KDA is (kills + assists) ÷ deaths; a zero-death match uses one as the divisor.</p>
         </figure>
         <figure class="impact-chart">
-          <figcaption><span class="label">Impact score by match</span><span class="hint">−5 to +5 · 0 is lobby average</span></figcaption>
+          <figcaption><span class="label">Impact score by match</span><span class="hint">{formView === 'recent' ? '−5 to +5 · 0 is lobby average' : formView === 'best' ? 'Best → lowest · 0 is lobby average' : 'Worst → highest · 0 is lobby average'}</span></figcaption>
           <div class="trend-scroll">
             <ol class="impact-trend">
               {#each trend as match (match.uuid)}
@@ -112,7 +136,7 @@
         <table class="num">
           <thead><tr><th>Result</th><th>Match</th><th>Hero</th><th>K/D/A</th><th>KDA</th><th>Impact</th><th>Length</th><th>Date</th></tr></thead>
           <tbody>
-            {#each player.recent as match (match.uuid)}
+            {#each selectedMatches as match (match.uuid)}
               <tr>
                 <td class:win={match.team === match.winning_team} class:loss={match.team !== match.winning_team}>{match.team === match.winning_team ? 'W' : 'L'}</td>
                 <td><a href="/m/{match.uuid}">{match.match_id}</a></td>
@@ -156,6 +180,12 @@
   .bar { height: 0.35rem; background: var(--panel-2); border-radius: 99px; overflow: hidden; }
   .bar i { display: block; height: 100%; background: var(--member); border-radius: inherit; }
   .form-chart { display: grid; gap: 0.45rem; margin: 0 0 1rem; }
+  .form-title { display: grid; gap: 0.15rem; }
+  .form-tabs { display: flex; gap: 0.15rem; border-bottom: 1px solid var(--line); }
+  .form-tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 0.45rem 0.65rem; color: var(--muted); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+  .form-tabs button:hover { color: var(--fg); }
+  .form-tabs button.active { color: var(--fg); border-bottom-color: var(--fg); }
+  .form-tabs button:focus-visible { outline: 2px solid var(--fg); outline-offset: 1px; }
   .form-chart figcaption { display: flex; align-items: baseline; gap: 0.75rem; }
   .trend-scroll { overflow-x: auto; }
   .trend { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(3.25rem, 1fr); align-items: end; gap: 0.35rem; min-width: 100%; min-height: 7.5rem; margin: 0; padding: 0.5rem 0 0; list-style: none; }

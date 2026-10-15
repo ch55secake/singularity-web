@@ -126,6 +126,7 @@ export interface PlayerAverage {
   accuracy: number;
   crit_rate: number;
   win_rate: number;
+  damage_per_minute: number;
   heroes: PlayerHeroAverage[];
   recent: RecentPlayerMatch[];
 }

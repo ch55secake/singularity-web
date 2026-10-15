@@ -62,11 +62,12 @@
   .kind { color: var(--faint); font-size: 0.75rem; margin-left: 0.25rem; }
   .tag { color: var(--member); font-size: 0.75rem; margin-left: 0.35rem; }
   .track { height: 0.6rem; background: var(--panel-2); border-radius: 4px; overflow: hidden; }
-  .fill { display: block; height: 100%; border-radius: 0 4px 4px 0; background: #d9dce3; }
+  .fill { display: block; height: 100%; border-radius: 0 4px 4px 0; background: #d9dce3; transform-origin: left; animation: bar-in 420ms var(--ease-out) both; }
   .fill.ability { background: #a98bf0; }
   .fill.melee { background: #e07fb0; }
   .fill.upgrade { background: #5fc2c9; }
   .fill.target { background: var(--team); }
   .val { text-align: right; min-width: 5.5rem; }
   .sub { color: var(--muted); font-size: 0.8rem; }
+  @keyframes bar-in { from { transform: scaleX(0); opacity: 0.45; } }
 </style>

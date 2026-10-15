@@ -133,7 +133,7 @@
       {:else}
         <p class="empty">No recent matches to chart yet.</p>
       {/if}
-      <div class="scroll-x">
+      <div class="scroll-x data-scroll" role="region" aria-label="Recent match history">
         <table class="num">
           <thead><tr><th>Result</th><th>Match</th><th>Hero</th><th>K/D/A</th><th>KDA</th><th>Impact</th><th>Length</th><th>Date</th></tr></thead>
           <tbody>
@@ -193,7 +193,7 @@
   .trend li { display: grid; grid-template-rows: auto 4.5rem auto; justify-items: center; gap: 0.2rem; min-width: 0; }
   .trend-value { font-size: 0.7rem; }
   .trend-bar { display: flex; align-items: end; width: min(1.4rem, 70%); height: 100%; overflow: hidden; border-radius: 4px 4px 0 0; background: var(--panel-2); }
-  .trend-bar i { display: block; width: 100%; height: var(--height); min-height: 3px; background: var(--bad); border-radius: inherit; }
+  .trend-bar i { display: block; width: 100%; height: var(--height); min-height: 3px; background: linear-gradient(180deg, color-mix(in srgb, var(--bad) 70%, white), var(--bad)); border-radius: inherit; transform-origin: bottom; animation: chart-rise 420ms var(--ease-out) both; }
   .trend li.win .trend-bar i { background: var(--good); }
   .trend-meta { display: flex; flex-direction: column; align-items: center; color: var(--muted); font-size: 0.64rem; line-height: 1.2; white-space: nowrap; }
   .trend li.win .trend-meta span:first-child { color: var(--good); font-weight: 700; }
@@ -204,14 +204,14 @@
   .impact-trend { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(3.25rem, 1fr); align-items: end; gap: 0.35rem; min-width: 100%; min-height: 7.5rem; margin: 0; padding: 0.5rem 0 0; list-style: none; }
   .impact-trend li { display: grid; grid-template-rows: auto 4.5rem auto; justify-items: center; gap: 0.2rem; min-width: 0; }
   .impact-bar { position: relative; width: min(1.4rem, 70%); height: 100%; background: linear-gradient(to bottom, transparent calc(50% - 0.5px), var(--line) calc(50% - 0.5px), var(--line) calc(50% + 0.5px), transparent calc(50% + 0.5px)); }
-  .impact-bar i { position: absolute; left: 0; width: 100%; height: var(--height); background: var(--muted); }
+  .impact-bar i { position: absolute; left: 0; width: 100%; height: var(--height); background: var(--muted); animation: chart-fade 420ms var(--ease-out) both; }
   .impact-bar i.positive { bottom: 50%; background: var(--good); }
   .impact-bar i.negative { top: 50%; background: var(--bad); }
   .impact-trend .trend-meta .win { color: var(--good); font-weight: 700; }
   .impact-trend .trend-meta .loss { color: var(--bad); font-weight: 700; }
-  table { width: 100%; border-collapse: collapse; min-width: 43rem; font-size: 0.9rem; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 43rem; font-size: 0.9rem; }
   th, td { padding: 0.5rem 0.6rem; text-align: right; white-space: nowrap; border-top: 1px solid var(--line); }
-  th { border-top: 0; color: var(--muted); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  th { position: sticky; top: 0; z-index: 3; border-top: 0; background: var(--panel); color: var(--muted); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; }
   th:first-child, td:first-child, .hero-cell { text-align: left; }
   td a { color: var(--fg); text-decoration: none; }
   td a:hover { text-decoration: underline; }
@@ -219,6 +219,8 @@
   .win { color: var(--good); font-weight: 700; }
   .loss { color: var(--bad); font-weight: 700; }
   .empty, .state { color: var(--muted); }
+  @keyframes chart-rise { from { transform: scaleY(0); opacity: 0.4; } }
+  @keyframes chart-fade { from { opacity: 0; } }
   @media (max-width: 50rem) {
     .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .hero-row { grid-template-columns: 2rem minmax(6rem, 1fr) 5rem; }

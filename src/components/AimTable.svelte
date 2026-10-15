@@ -83,7 +83,7 @@
   </div>
 
   <h3 class="label all">All players</h3>
-  <div class="scroll-x">
+  <div class="scroll-x data-scroll" role="region" aria-label="Combat statistics for all players">
     <table class="num">
       <thead><tr><th class="l">Player</th>{#each stats as s}<th title={s.help}>{s.label}</th>{/each}<th>Kills G/A/M</th></tr></thead>
       <tbody>
@@ -124,14 +124,16 @@
   .keys span { display: inline-flex; align-items: center; gap: 0.35rem; }
   .keys i { width: 0.55rem; height: 0.55rem; border-radius: 2px; display: inline-block; }
   .all { margin: 1.5rem 0 0.5rem; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 50rem; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.88rem; min-width: 50rem; }
   th, td { padding: 0.4rem 0.55rem; text-align: right; white-space: nowrap; }
-  th { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line); }
+  th { position: sticky; top: 0; z-index: 3; background: var(--panel); box-shadow: 0 1px 0 var(--line); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
   td { color: var(--fg); border-top: 1px solid var(--line); }
-  .l { text-align: left; }
+  .l { position: sticky; left: 0; z-index: 2; min-width: 10.5rem; text-align: left; background: var(--panel); box-shadow: 1px 0 0 var(--line); }
+  thead .l { z-index: 4; }
   tbody tr { cursor: pointer; }
   tbody tr:hover, tr.focus { background: var(--panel-2); }
-  tr.focus { box-shadow: inset 3px 0 0 var(--team); }
+  tbody tr:hover .l, tr.focus .l { background: var(--panel-2); }
+  tr.focus .l { box-shadow: inset 3px 0 0 var(--team), 1px 0 0 var(--line); }
   .pl { display: inline-flex; align-items: center; gap: 0.5rem; }
   @media (max-width: 30rem) { .card.wide { grid-column: auto; } }
 </style>

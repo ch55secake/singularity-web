@@ -81,6 +81,7 @@
         <span class="label">{TEAMS[0].name}</span>
         <span class="outcome">{match.winning_team === 0 ? 'Victory' : 'Defeat'}</span>
         <span class="sub num">{fmt(teamSouls[0])} souls</span>
+        <span class="lineup" aria-label="{TEAMS[0].name} lineup">{#each match.players.filter((p) => p.team === 0) as p (p.slot)}<HeroIcon hero={p.hero} team={0} size={28} />{/each}</span>
       </div>
       <div class="centre">
         <div class="score num"><span class="team-0">{teamKills[0]}</span><span class="dash">–</span><span class="team-1">{teamKills[1]}</span></div>
@@ -96,6 +97,7 @@
         <span class="label">{TEAMS[1].name}</span>
         <span class="outcome">{match.winning_team === 1 ? 'Victory' : 'Defeat'}</span>
         <span class="sub num">{fmt(teamSouls[1])} souls</span>
+        <span class="lineup" aria-label="{TEAMS[1].name} lineup">{#each match.players.filter((p) => p.team === 1) as p (p.slot)}<HeroIcon hero={p.hero} team={1} size={28} />{/each}</span>
       </div>
     </header>
 
@@ -145,16 +147,18 @@
   .state { display: grid; gap: 0.4rem; color: var(--muted); }
   .state h1 { color: var(--fg); font-size: 1.3rem; }
   .sub { color: var(--muted); font-size: 0.85rem; }
-  .hero { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem; padding: 1.5rem; position: relative; overflow: hidden; }
+  .hero { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 1rem; padding: 1.5rem; position: relative; overflow: hidden; }
   .hero::before, .hero::after { content: ''; position: absolute; top: 0; bottom: 0; width: 40%; opacity: 0.12; pointer-events: none; }
   .hero::before { left: 0; background: linear-gradient(90deg, var(--amber), transparent); }
   .hero::after { right: 0; background: linear-gradient(270deg, var(--sapphire), transparent); }
   .side { display: grid; gap: 0.1rem; position: relative; }
   .side.right { text-align: right; }
+  .lineup { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.5rem; }
+  .side.right .lineup { justify-content: flex-end; }
   .outcome { font-family: var(--display); font-weight: 800; font-size: clamp(1.8rem, 4.5vw, 2.8rem); line-height: 1; text-transform: uppercase; color: var(--faint); }
   .side.won .outcome { color: var(--team); }
   .centre { display: grid; justify-items: center; gap: 0.25rem; position: relative; }
-  .score { font-family: var(--display); font-weight: 800; font-size: clamp(2.4rem, 6vw, 3.6rem); line-height: 1; display: flex; gap: 0.4rem; }
+  .score { font-family: var(--display); font-weight: 800; font-size: clamp(2.8rem, 7vw, 4.2rem); line-height: 0.9; display: flex; gap: 0.5rem; text-shadow: 0 0 24px rgb(255 255 255 / 0.08); }
   .score .team-0 { color: var(--amber); }
   .score .team-1 { color: var(--sapphire); }
   .dash { color: var(--faint); }
@@ -178,5 +182,6 @@
   @media (max-width: 40rem) {
     .hero { grid-template-columns: 1fr 1fr; }
     .centre { grid-column: 1 / -1; order: -1; }
+    .lineup { display: none; }
   }
 </style>

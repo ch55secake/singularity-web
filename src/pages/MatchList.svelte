@@ -59,7 +59,7 @@
               <div class="meta">
                 <div class="meta-top">
                   <span class="mode">{m.mode}</span>
-                  <span class="result" class:win={ours.length > 0 && groupWins === ours.length} class:loss={ours.length > 0 && groupWins === 0} class:split={groupWins > 0 && groupWins < ours.length}>{groupResult}</span>
+                  <span class="group-result" class:win={ours.length > 0 && groupWins === ours.length} class:loss={ours.length > 0 && groupWins === 0} class:split={groupWins > 0 && groupWins < ours.length}>{groupResult}</span>
                 </div>
                 <span class="date" title={when(m.start_time)}>{ago(m.start_time)}</span>
                 <span class="sub num">{mmss(m.duration_s)} · Match {m.match_id}</span>
@@ -79,11 +79,15 @@
               <div class="ours">
                 {#each ours as p (p.slot)}
                   <span class="member" class:win={p.team === m.winning_team}>
-                    <span class="result">{p.team === m.winning_team ? 'W' : 'L'}</span>
-                    <strong>{p.member?.name}</strong>
-                    <span class="sub">{p.hero.name}</span>
-                    <span class="num">{p.kills}/{p.deaths}/{p.assists}</span>
-                    <span class="sub num">KDR {ratio(p.kills, p.deaths)}</span>
+                    <span class="member-result" aria-label={p.team === m.winning_team ? 'Win' : 'Loss'}>{p.team === m.winning_team ? 'W' : 'L'}</span>
+                    <span class="member-identity">
+                      <strong>{p.member?.name}</strong>
+                      <span class="sub">{p.hero.name}</span>
+                    </span>
+                    <span class="member-stats">
+                      <span class="num">{p.kills}/{p.deaths}/{p.assists}</span>
+                      <span class="sub num">KDR {ratio(p.kills, p.deaths)}</span>
+                    </span>
                   </span>
                 {:else}
                   <span class="sub">No group members in this match</span>
@@ -121,23 +125,29 @@
   .meta { display: grid; align-content: center; gap: 0.3rem; }
   .meta-top { display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; }
   .mode { font-family: var(--display); font-weight: 800; font-size: 1.6rem; line-height: 1; }
-  .result { border: 1px solid var(--line); border-radius: 99px; padding: 0.08rem 0.45rem; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
-  .result.win { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, var(--line)); }
-  .result.loss { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 45%, var(--line)); }
-  .result.split { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 45%, var(--line)); }
+  .group-result { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 99px; padding: 0.08rem 0.45rem; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; line-height: 1.4; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+  .group-result.win { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, var(--line)); }
+  .group-result.loss { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 45%, var(--line)); }
+  .group-result.split { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 45%, var(--line)); }
   .date { font-size: 0.9rem; font-weight: 600; }
   .teams { display: grid; gap: 0.4rem; min-width: 0; }
   .team { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
-  .tname { width: 8.5rem; flex: none; display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+  .tname { width: 9.5rem; flex: none; display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; font-weight: 600; color: var(--muted); }
   .team.won .tname { color: var(--team); }
   .team-score { margin-left: auto; font-size: 0.95rem; color: var(--fg); }
   .winner { border-radius: 3px; padding: 0.05rem 0.25rem; color: var(--team); background: color-mix(in srgb, var(--team) 12%, transparent); font-size: 0.57rem; letter-spacing: 0.06em; }
   .heroes { display: flex; gap: 4px; flex-wrap: wrap; }
   .ours { display: grid; gap: 0.35rem; font-size: 0.9rem; min-width: 0; }
-  .member { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.6rem; }
+  .member { display: grid; grid-template-columns: 1.25rem minmax(0, 1fr) auto; align-items: center; gap: 0.25rem 0.55rem; min-width: 0; }
+  .member-result { display: inline-grid; place-items: center; width: 1.15rem; height: 1.15rem; border: 1px solid color-mix(in srgb, var(--bad) 45%, var(--line)); border-radius: 50%; color: var(--bad); font-family: var(--display); font-size: 0.68rem; font-weight: 800; line-height: 1; }
+  .member.win .member-result { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, var(--line)); }
+  .member-identity { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.1rem 0.5rem; min-width: 0; }
   .member strong { color: var(--member); }
-  .result { font-family: var(--display); font-weight: 800; color: var(--bad); width: 1rem; }
-  .member.win .result { color: var(--good); }
+  .member-stats { display: inline-flex; align-items: center; gap: 0.65rem; white-space: nowrap; }
+  @media (max-width: 35rem) {
+    .member { grid-template-columns: 1.25rem minmax(0, 1fr); }
+    .member-stats { grid-column: 2; }
+  }
   @media (max-width: 52rem) {
     .row { grid-template-columns: 1fr; }
     .meta { display: flex; gap: 0.75rem; align-items: baseline; }

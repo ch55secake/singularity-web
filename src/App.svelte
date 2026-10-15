@@ -52,7 +52,7 @@ const playerName = $derived(playerPath ? decodeURIComponent(playerPath) : null)
   .inner { max-width: 76rem; margin: 0 auto; padding: 0.7rem 16px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
   .brand { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--display); font-weight: 800; font-size: 1.35rem; letter-spacing: 0.04em; text-transform: uppercase; text-decoration: none; }
   .brand svg { width: 1.5rem; height: 1.5rem; }
-  nav { display: flex; align-items: center; gap: 1.2rem; }
+  nav { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 0.35rem 0.9rem; }
   nav a { text-decoration: none; color: var(--muted); font-weight: 600; font-size: 0.9rem; }
   nav a[aria-current='page'] { color: var(--fg); }
   main { max-width: 76rem; margin: 0 auto; padding: 1.5rem 16px 4rem; }

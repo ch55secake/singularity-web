@@ -1,10 +1,20 @@
 # Read API contract
 
-The web app reads match data from three endpoints. singularity-platform should serve
-them under the same origin as the app (platform issues #9 and #10). Until then,
-`npm run dev` serves the sample responses in `fixtures/api/`.
+The web app reads match, player, session, and lane data from the read API.
+singularity-platform should serve it under the same origin as the app. `npm run dev`
+serves the sample responses in `fixtures/api/` unless `SINGULARITY_API` is set to
+proxy a platform instance.
 
 The TypeScript types in `src/lib/types.ts` are the source of truth for field names.
+
+## `GET /api/matches/{uuid}/lane-stats`
+
+Lane-phase stats for the first 10 minutes. Each player's counters and soul-source
+totals come from the latest recorded cumulative-stat snapshot at or before
+10:00; `snapshot_time_s` reports when that snapshot was captured. Missing stats
+stay `null`. `souls.net_worth` is held net worth, while the remaining `souls`
+fields are source totals from the match metadata. `deaths` lists hero deaths
+recorded in the lane window, with match-relative seconds and player slots.
 
 ## `GET /api/matches`
 

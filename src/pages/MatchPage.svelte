@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getMatch } from '../lib/api'
+  import { getLaneStats, getMatch } from '../lib/api'
   import { TEAMS, fmt, mmss, when } from '../lib/format'
   import { route, setHash } from '../lib/router.svelte'
   import Scoreboard from '../components/Scoreboard.svelte'
@@ -8,13 +8,14 @@
   import DamageBreakdown from '../components/DamageBreakdown.svelte'
   import BuildTimeline from '../components/BuildTimeline.svelte'
   import MapView from '../components/MapView.svelte'
+  import LaneStatsPanel from '../components/LaneStatsPanel.svelte'
   import PlayerPicker from '../components/PlayerPicker.svelte'
   import HeroIcon from '../components/HeroIcon.svelte'
   import LoadingSkeleton from '../components/LoadingSkeleton.svelte'
   import StatePanel from '../components/StatePanel.svelte'
   import Icon from '../components/Icon.svelte'
   import { notify } from '../lib/toast.svelte'
-  import type { MatchDetail } from '../lib/types'
+  import type { LaneStats, MatchDetail } from '../lib/types'
 
   let { uuid }: { uuid: string } = $props()
 
@@ -23,16 +24,35 @@
     { id: 'combat', label: 'Combat' },
     { id: 'map', label: 'Map' },
     { id: 'builds', label: 'Builds' },
+    { id: 'lane', label: 'Lane' },
   ]
   const tab = $derived(TABS.some((t) => t.id === route.hash) ? route.hash : 'overview')
 
   let match = $state<MatchDetail | null>(null)
   let error = $state<string | null>(null)
   let focus = $state<number | null>(null)
+  let laneStats = $state<LaneStats | null>(null)
+  let laneError = $state<string | null>(null)
+  let laneState = $state<'idle' | 'loading' | 'ready' | 'error'>('idle')
   const focusedPlayer = $derived(match?.players.find((p) => p.slot === focus) ?? null)
 
   function selectTab(id: string) {
     setHash(id === 'overview' ? '' : id)
+  }
+
+  function loadLaneStats() {
+    laneState = 'loading'
+    laneError = null
+    getLaneStats(uuid).then(
+      (stats) => {
+        laneStats = stats
+        laneState = 'ready'
+      },
+      (e: Error) => {
+        laneError = e.message
+        laneState = 'error'
+      },
+    )
   }
 
   async function copyMatchLink() {
@@ -68,6 +88,10 @@
     },
     (e: Error) => (error = e.message),
   )
+  })
+
+  $effect(() => {
+    if (tab === 'lane' && laneState === 'idle') loadLaneStats()
   })
 
   const teamKills = $derived(
@@ -146,6 +170,14 @@
             </section>
           {:else if tab === 'map'}
             <MapView {match} bind:focus />
+          {:else if tab === 'lane'}
+            {#if laneState === 'idle' || laneState === 'loading'}
+              <p class="lane-loading" aria-live="polite">Loading lane stats…</p>
+            {:else if laneState === 'error'}
+              <StatePanel kind="error" title="Couldn’t load lane stats" message={laneError ?? 'Try again in a moment.'} actionLabel="Retry" onaction={loadLaneStats} />
+            {:else if laneStats}
+              <LaneStatsPanel lane={laneStats} {match} />
+            {/if}
           {:else if tab === 'builds'}
             <section class="panel">
               <div class="panel-head"><h2>Build order</h2><PlayerPicker players={match.players} bind:focus /></div>
@@ -189,6 +221,7 @@
   .tabs button:focus-visible { outline-offset: -2px; }
   .tab-context { display: flex; align-items: center; gap: 0.55rem; min-height: 2.25rem; color: var(--fg); }
   .tab-context strong { font-size: 0.9rem; }
+  .lane-loading { padding: 1rem; color: var(--muted); }
   #match-tabpanel { min-width: 0; }
   #match-tabpanel:focus-visible { outline: 2px solid var(--sapphire); outline-offset: 3px; border-radius: var(--radius); }
   .tab-content { display: grid; gap: 1rem; min-width: 0; animation: tab-in 220ms var(--ease-out) both; }

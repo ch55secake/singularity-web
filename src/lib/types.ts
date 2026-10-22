@@ -111,6 +111,52 @@ export interface Death {
   time_to_kill_s: number;
 }
 
+export interface LaneSouls {
+  /** Held net worth at the snapshot, not total earned. */
+  net_worth: number | null;
+  player: number | null;
+  player_orbs: number | null;
+  lane_creeps: number | null;
+  lane_creep_orbs: number | null;
+  neutral_creeps: number | null;
+  neutral_creep_orbs: number | null;
+  boss: number | null;
+  boss_orbs: number | null;
+  treasure: number | null;
+  denied: number | null;
+  lost_on_death: number | null;
+}
+
+export interface LanePlayer {
+  slot: number;
+  team: Team;
+  hero: Hero;
+  /** Actual cumulative-stat snapshot time, at or before lane_phase_end_s. */
+  snapshot_time_s: number | null;
+  kills: number | null;
+  deaths: number | null;
+  assists: number | null;
+  creep_kills: number | null;
+  neutral_kills: number | null;
+  denies: number | null;
+  hero_damage: number | null;
+  souls: LaneSouls;
+}
+
+export interface LaneDeath {
+  t: number;
+  victim: number;
+  killer: number;
+}
+
+export interface LaneStats {
+  uuid: string;
+  match_id: number;
+  lane_phase_end_s: number;
+  players: LanePlayer[];
+  deaths: LaneDeath[];
+}
+
 export interface ObjectiveEvent {
   t: number;
   /** Owning team for structures; claiming team for the mid-boss. */

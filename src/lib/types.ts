@@ -157,6 +157,25 @@ export interface LaneStats {
   deaths: LaneDeath[];
 }
 
+export interface LanePairing {
+  members: [string, string];
+  matches: number;
+  result_matches: number;
+  wins: number;
+  match_win_rate: number | null;
+  lane_samples: number;
+  lane_leads: number;
+  lane_ties: number;
+  lane_trails: number;
+  lane_lead_rate: number | null;
+  average_net_worth_lead: number | null;
+}
+
+export interface LanePairings {
+  lane_phase_end_s: number;
+  pairings: LanePairing[];
+}
+
 export interface ObjectiveEvent {
   t: number;
   /** Owning team for structures; claiming team for the mid-boss. */

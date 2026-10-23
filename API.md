@@ -1,6 +1,6 @@
 # Read API contract
 
-The web app reads match, player, session, and lane data from the read API.
+The web app reads match, player, session, lane, and lane-pairing data from the read API.
 singularity-platform should serve it under the same origin as the app. `npm run dev`
 serves the sample responses in `fixtures/api/` unless `SINGULARITY_API` is set to
 proxy a platform instance.
@@ -15,6 +15,35 @@ totals come from the latest recorded cumulative-stat snapshot at or before
 stay `null`. `souls.net_worth` is held net worth, while the remaining `souls`
 fields are source totals from the match metadata. `deaths` lists hero deaths
 recorded in the lane window, with match-relative seconds and player slots.
+
+## `GET /api/lane-pairings`
+
+Aggregates tracked-member duos that were assigned to the same lane. Account IDs
+are not returned. `matches` counts appearances together; `match_win_rate` is
+their whole-match win rate. Lane comparison is limited to matches where each
+team had exactly two players on that assigned lane and both had a held-net-worth
+snapshot at or before 10:00. The lane lead is the duo's combined net worth minus
+the opposing duo's; missing comparisons are excluded rather than counted as
+ties or losses.
+
+```jsonc
+{
+  "lane_phase_end_s": 600,
+  "pairings": [{
+    "members": ["alice", "bob"],
+    "matches": 8,
+    "result_matches": 8,
+    "wins": 5,
+    "match_win_rate": 0.625,
+    "lane_samples": 6,
+    "lane_leads": 4,
+    "lane_ties": 0,
+    "lane_trails": 2,
+    "lane_lead_rate": 0.667,
+    "average_net_worth_lead": 1250.0
+  }]
+}
+```
 
 ## `GET /api/matches`
 

@@ -1,0 +1,18 @@
+{
+  "lane_phase_end_s": 600,
+  "pairings": [
+    {
+      "members": ["cheesecake", "max"],
+      "matches": 8,
+      "result_matches": 8,
+      "wins": 5,
+      "match_win_rate": 0.625,
+      "lane_samples": 6,
+      "lane_leads": 4,
+      "lane_ties": 0,
+      "lane_trails": 2,
+      "lane_lead_rate": 0.667,
+      "average_net_worth_lead": 1250.0
+    }
+  ]
+}

@@ -1,13 +1,14 @@
+# syntax=docker/dockerfile:1
 # Build the static app, then serve it with nginx. rake only needs Docker; Node
 # stays inside the build stage.
 FROM node:26-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 COPY index.html vite.config.ts svelte.config.js tsconfig.json tsconfig.app.json tsconfig.node.json ./
 COPY public ./public
 COPY src ./src
-RUN npm run build
+RUN --mount=type=cache,target=/root/.npm npm run build
 
 FROM nginx:1.29-alpine
 # The nginx image runs envsubst on templates at startup, filling in the API upstream.

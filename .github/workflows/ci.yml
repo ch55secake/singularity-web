@@ -65,8 +65,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Build container
-        run: docker build --tag singularity-web:ci .
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          tags: singularity-web:ci
+          load: true
+          cache-from: type=gha
+          cache-to: ${{ github.event_name == 'push' && 'type=gha,mode=max' || '' }}
       - name: Smoke test served routes
         run: |
           # nginx resolves the API upstream at startup, so point it at a local

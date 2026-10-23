@@ -24,7 +24,14 @@ their whole-match win rate. Lane comparison is limited to matches where each
 team had exactly two players on that assigned lane and both had a held-net-worth
 snapshot at or before 10:00. The lane lead is the duo's combined net worth minus
 the opposing duo's; missing comparisons are excluded rather than counted as
-ties or losses.
+ties or losses. `average_kills`, `average_deaths`, and `average_assists` describe
+the tracked duo at its latest available snapshots in the lane window; `stats_samples`
+counts games where both players had all three values. Average creep kills and
+denies use `economy_samples`, while average hero damage uses `damage_samples`.
+`hero_combinations` groups games by the heroes each tracked member played. In
+each `heroes` array, order matches the `members` array. `games` contains the most
+recent 100 appearances per duo; aggregate totals cover all appearances, and
+`games_truncated` indicates when older game details were omitted.
 
 ```jsonc
 {
@@ -40,7 +47,42 @@ ties or losses.
     "lane_ties": 0,
     "lane_trails": 2,
     "lane_lead_rate": 0.667,
-    "average_net_worth_lead": 1250.0
+    "average_net_worth_lead": 1250.0,
+    "stats_samples": 8,
+    "average_kills": 2.25,
+    "average_deaths": 1.5,
+    "average_assists": 4.5,
+    "economy_samples": 8,
+    "average_creep_kills": 42.0,
+    "average_denies": 3.0,
+    "damage_samples": 8,
+    "average_hero_damage": 9200.0,
+    "hero_combinations": [{
+      "heroes": [{ "id": 72, "name": "Billy", "icon": "...", "card": null },
+                 { "id": 76, "name": "Graves", "icon": "...", "card": null }],
+      "matches": 3,
+      "result_matches": 3,
+      "wins": 2,
+      "match_win_rate": 0.667,
+      "lane_samples": 3,
+      "lane_leads": 2,
+      "lane_ties": 0,
+      "lane_trails": 1,
+      "lane_lead_rate": 0.667,
+      "average_net_worth_lead": 1800.0
+    }],
+    "games": [{
+      "uuid": "37bb05cc-27d5-5ae8-8c28-129dd11cd85c",
+      "match_id": 111839173,
+      "start_time": 1791289512,
+      "heroes": [{ "id": 72, "name": "Billy", "icon": "...", "card": null },
+                 { "id": 76, "name": "Graves", "icon": "...", "card": null }],
+      "match_result": "win",
+      "lane_net_worth_lead": 2100,
+      "stats": { "kills": 3, "deaths": 1, "assists": 4,
+                  "creep_kills": 42, "denies": 3, "hero_damage": 9200 }
+    }],
+    "games_truncated": false
   }]
 }
 ```

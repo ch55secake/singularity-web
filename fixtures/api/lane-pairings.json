@@ -3,16 +3,86 @@
   "pairings": [
     {
       "members": ["cheesecake", "max"],
-      "matches": 8,
-      "result_matches": 8,
-      "wins": 5,
-      "match_win_rate": 0.625,
-      "lane_samples": 6,
-      "lane_leads": 4,
+      "matches": 2,
+      "result_matches": 2,
+      "wins": 1,
+      "match_win_rate": 0.5,
+      "lane_samples": 2,
+      "lane_leads": 1,
       "lane_ties": 0,
-      "lane_trails": 2,
-      "lane_lead_rate": 0.667,
-      "average_net_worth_lead": 1250.0
+      "lane_trails": 1,
+      "lane_lead_rate": 0.5,
+      "average_net_worth_lead": 500.0,
+      "stats_samples": 2,
+      "average_kills": 2.5,
+      "average_deaths": 1.5,
+      "average_assists": 4.0,
+      "economy_samples": 2,
+      "average_creep_kills": 48.0,
+      "average_denies": 3.5,
+      "damage_samples": 2,
+      "average_hero_damage": 10500.0,
+      "hero_combinations": [
+        {
+          "heroes": [
+            { "id": 72, "name": "Billy", "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/punkgoat_sm.webp", "card": null },
+            { "id": 76, "name": "Graves", "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/necro_sm.webp", "card": null }
+          ],
+          "matches": 1,
+          "result_matches": 1,
+          "wins": 1,
+          "match_win_rate": 1.0,
+          "lane_samples": 1,
+          "lane_leads": 1,
+          "lane_ties": 0,
+          "lane_trails": 0,
+          "lane_lead_rate": 1.0,
+          "average_net_worth_lead": 2200.0
+        },
+        {
+          "heroes": [
+            { "id": 1, "name": "Infernus", "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/inferno_sm.webp", "card": null },
+            { "id": 72, "name": "Billy", "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/punkgoat_sm.webp", "card": null }
+          ],
+          "matches": 1,
+          "result_matches": 1,
+          "wins": 0,
+          "match_win_rate": 0.0,
+          "lane_samples": 1,
+          "lane_leads": 0,
+          "lane_ties": 0,
+          "lane_trails": 1,
+          "lane_lead_rate": 0.0,
+          "average_net_worth_lead": -1200.0
+        }
+      ],
+      "games": [
+        {
+          "uuid": "37bb05cc-27d5-5ae8-8c28-129dd11cd85c",
+          "match_id": 111839173,
+          "start_time": 1791289512,
+          "heroes": [
+            { "id": 72, "name": "Billy", "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/punkgoat_sm.webp", "card": null },
+            { "id": 76, "name": "Graves", "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/necro_sm.webp", "card": null }
+          ],
+          "match_result": "win",
+          "lane_net_worth_lead": 2200,
+          "stats": { "kills": 3, "deaths": 1, "assists": 5, "creep_kills": 52, "denies": 4, "hero_damage": 12000 }
+        },
+        {
+          "uuid": "cd91fc9a-fd82-538a-8fa8-da8941174f89",
+          "match_id": 113390164,
+          "start_time": 1791555589,
+          "heroes": [
+            { "id": 1, "name": "Infernus", "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/inferno_sm.webp", "card": null },
+            { "id": 72, "name": "Billy", "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/punkgoat_sm.webp", "card": null }
+          ],
+          "match_result": "loss",
+          "lane_net_worth_lead": -1200,
+          "stats": { "kills": 2, "deaths": 2, "assists": 3, "creep_kills": 44, "denies": 3, "hero_damage": 9000 }
+        }
+      ],
+      "games_truncated": false
     }
   ]
 }

@@ -12,7 +12,7 @@ match gets its own page at `/m/<uuid>` with a Leetify-style breakdown:
   the selected player and a kill feed. `?t=<seconds>` opens it at a moment.
 - **Builds:** items in the order bought and when each ability was unlocked and upgraded
 - **Lanes:** tracked-player duos ranked by 10-minute assigned-lane net-worth lead, with
-  whole-match win rate shown separately
+  early K/D/A, farm, hero combinations, match history, and whole-match win rate
 
 Clicking a player anywhere selects them across all tabs.
 The match list can be filtered by group member and links to each member's player

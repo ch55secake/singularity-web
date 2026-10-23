@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getLanePairings } from '../lib/api'
-  import { fmt, pct } from '../lib/format'
+  import { fmt, pct, when } from '../lib/format'
+  import HeroIcon from '../components/HeroIcon.svelte'
   import LoadingSkeleton from '../components/LoadingSkeleton.svelte'
   import StatePanel from '../components/StatePanel.svelte'
   import Icon from '../components/Icon.svelte'
@@ -40,6 +41,8 @@
     return `${rounded > 0 ? '+' : ''}${fmt(rounded)}`
   }
   const rateLabel = (value: number | null) => value === null ? '—' : `${pct(value, 1).toFixed(0)}%`
+  const averageLabel = (value: number | null) => value === null ? '—' : value.toFixed(1)
+  const damageLabel = (value: number | null) => value === null ? '—' : fmt(Math.round(value))
 </script>
 
 <svelte:head><title>Lanes · Singularity</title></svelte:head>
@@ -98,12 +101,20 @@
 
         <div class="table-scroll scroll-x data-scroll" role="region" aria-label="Tracked lane duo performance">
           <table class="num">
-            <thead><tr><th class="pair-cell">Pair</th><th>Games</th><th>Lane record</th><th>Avg. 10m lead</th><th>Lane lead rate</th><th>Match wins</th></tr></thead>
+            <thead><tr><th class="pair-cell">Pair</th><th>Games</th><th>Avg. K / D / A</th><th>Farm / denies</th><th>Lane record</th><th>Avg. 10m lead</th><th>Lane lead rate</th><th>Hero damage</th><th>Match wins</th></tr></thead>
             <tbody>
               {#each pairings as pairing, index (`${pairing.members.join('-')}-${index}`)}
                 <tr>
                   <td class="pair-cell"><span class="rank">{String(index + 1).padStart(2, '0')}</span><strong>{pairing.members[0]} <span>+</span> {pairing.members[1]}</strong></td>
                   <td>{fmt(pairing.matches)}</td>
+                  <td>
+                    <strong>{averageLabel(pairing.average_kills)} / {averageLabel(pairing.average_deaths)} / {averageLabel(pairing.average_assists)}</strong>
+                    <small>{pairing.stats_samples} snapshot pairs</small>
+                  </td>
+                  <td>
+                    <strong>{averageLabel(pairing.average_creep_kills)} / {averageLabel(pairing.average_denies)}</strong>
+                    <small>{pairing.economy_samples} snapshot pairs</small>
+                  </td>
                   <td class="lane-record">
                     {#if pairing.lane_samples}
                       <strong>{pairing.lane_leads}–{pairing.lane_ties}–{pairing.lane_trails}</strong>
@@ -123,14 +134,67 @@
                     {:else}<span class="muted">—</span>{/if}
                   </td>
                   <td>
+                    <strong>{damageLabel(pairing.average_hero_damage)}</strong>
+                    <small>{pairing.damage_samples} snapshot pairs</small>
+                  </td>
+                  <td>
                     {#if pairing.match_win_rate !== null}
                       <strong>{rateLabel(pairing.match_win_rate)}</strong>
                       <small>{pairing.wins}/{pairing.result_matches} wins</small>
                     {:else}<span class="muted">—</span>{/if}
                   </td>
                 </tr>
+                <tr class="details-row">
+                  <td colspan="9">
+                    <details>
+                      <summary>Hero combinations and game history <span>{pairing.hero_combinations.length} combinations · {pairing.games.length} recent games</span></summary>
+                      <div class="details-grid">
+                        <section class="hero-combinations" aria-label="Hero combinations">
+                          <h3>Hero combinations</h3>
+                          {#each pairing.hero_combinations as combination (`${combination.heroes[0].id}-${combination.heroes[1].id}`)}
+                            <article class="combo">
+                              <div class="combo-heroes">
+                                <HeroIcon hero={combination.heroes[0]} size={26} />
+                                <span aria-hidden="true">+</span>
+                                <HeroIcon hero={combination.heroes[1]} size={26} />
+                              </div>
+                              <div class="combo-copy">
+                                <strong>{pairing.members[0]}: {combination.heroes[0].name} · {pairing.members[1]}: {combination.heroes[1].name}</strong>
+                                <span class="sub">{combination.matches} {combination.matches === 1 ? 'game' : 'games'} · {combination.wins}/{combination.result_matches} match wins</span>
+                              </div>
+                              <div class="combo-lead" class:positive={combination.average_net_worth_lead !== null && combination.average_net_worth_lead > 0} class:negative={combination.average_net_worth_lead !== null && combination.average_net_worth_lead < 0}>
+                                <strong>{leadLabel(combination.average_net_worth_lead)}</strong>
+                                <small>{combination.lane_samples} lane samples</small>
+                              </div>
+                            </article>
+                          {:else}
+                            <p class="sub">No hero combinations available.</p>
+                          {/each}
+                        </section>
+                        <section class="game-history" aria-label="Recent games">
+                          <h3>Recent games</h3>
+                          {#each pairing.games as game (game.uuid)}
+                            <a class="game" href="/m/{game.uuid}">
+                              <span class="game-date">{when(game.start_time)}</span>
+                              <span class="game-match">Match {game.match_id}<small class:win={game.match_result === 'win'} class:loss={game.match_result === 'loss'}>{game.match_result ?? 'result unavailable'}</small></span>
+                              <span class="game-heroes">
+                                <span><HeroIcon hero={game.heroes[0]} size={23} /><small>{pairing.members[0]} · {game.heroes[0].name}</small></span>
+                                <span><HeroIcon hero={game.heroes[1]} size={23} /><small>{pairing.members[1]} · {game.heroes[1].name}</small></span>
+                              </span>
+                              <span class="game-lane" class:positive={game.lane_net_worth_lead !== null && game.lane_net_worth_lead > 0} class:negative={game.lane_net_worth_lead !== null && game.lane_net_worth_lead < 0}>{leadLabel(game.lane_net_worth_lead)}<small>lane lead</small></span>
+                              <span class="game-kda">{game.stats.kills ?? '—'}/{game.stats.deaths ?? '—'}/{game.stats.assists ?? '—'}<small>K/D/A</small></span>
+                            </a>
+                          {:else}
+                            <p class="sub">No match details available.</p>
+                          {/each}
+                          {#if pairing.games_truncated}<p class="history-note">Showing the latest {pairing.games.length} games; aggregate stats include the full history.</p>{/if}
+                        </section>
+                      </div>
+                    </details>
+                  </td>
+                </tr>
               {:else}
-                <tr><td colspan="6" class="empty">No duo matches this player filter.</td></tr>
+                <tr><td colspan="9" class="empty">No duo matches this player filter.</td></tr>
               {/each}
             </tbody>
           </table>
@@ -141,7 +205,7 @@
         <span class="method-icon"><Icon name="info" size={17} /></span>
         <div>
           <strong>How lane performance is measured</strong>
-          <p>Pairings use recorded lane assignments. A lane comparison needs two players on each side and a held-net-worth snapshot for all four at or before {Math.floor(data.lane_phase_end_s / 60)}:00. The average lead is your duo’s combined net worth minus the opposing duo’s; whole-match wins are shown separately. Low sample counts are a useful reminder that these are trends, not guarantees.</p>
+          <p>Pairings use recorded lane assignments. A lane comparison needs two players on each side and a held-net-worth snapshot for all four at or before {Math.floor(data.lane_phase_end_s / 60)}:00. The average lead is your duo’s combined net worth minus the opposing duo’s; whole-match wins are shown separately. K/D/A, creep kills, denies, and hero damage are combined per duo at their latest available snapshots. Hero combinations and recent match details are expandable; low sample counts are a reminder these are trends, not guarantees.</p>
         </div>
       </aside>
     {/if}
@@ -167,7 +231,7 @@
   .controls { display: flex; gap: 0.6rem; }
   .controls label { display: grid; gap: 0.2rem; color: var(--muted); font-size: 0.67rem; }
   select { max-width: 12rem; padding: 0.45rem 1.8rem 0.45rem 0.55rem; border: 1px solid var(--line); border-radius: 6px; background: var(--panel-2); color: var(--fg); font: inherit; font-size: 0.75rem; }
-  table { width: 100%; min-width: 48rem; border-collapse: collapse; font-size: 0.8rem; }
+  table { width: 100%; min-width: 70rem; border-collapse: collapse; font-size: 0.8rem; }
   th, td { padding: 0.7rem 0.65rem; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
   th { color: var(--muted); font-size: 0.64rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
   .pair-cell { min-width: 14rem; text-align: left; }
@@ -186,6 +250,34 @@
   .negative { color: var(--bad); }
   .muted { color: var(--faint); }
   .empty { padding: 1.25rem; color: var(--muted); text-align: center; }
+  .details-row > td { padding: 0; text-align: left; white-space: normal; }
+  .details-row details { border-bottom: 1px solid var(--line); }
+  .details-row summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.6rem 0.7rem; color: var(--muted); font-size: 0.72rem; cursor: pointer; }
+  .details-row summary:hover { color: var(--fg); }
+  .details-row summary span { color: var(--faint); font-size: 0.65rem; }
+  .details-grid { display: grid; grid-template-columns: minmax(15rem, 0.8fr) minmax(25rem, 1.2fr); gap: 1.25rem; padding: 0.8rem; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--panel-2) 45%, transparent); }
+  .details-grid h3 { margin-bottom: 0.55rem; color: var(--muted); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .hero-combinations { display: grid; align-content: start; gap: 0.35rem; }
+  .combo { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.55rem; padding: 0.45rem; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+  .combo-heroes { display: flex; align-items: center; gap: 0.25rem; color: var(--faint); }
+  .combo-copy { display: grid; gap: 0.08rem; min-width: 0; }
+  .combo-copy strong { overflow: hidden; color: var(--fg); font-size: 0.75rem; text-overflow: ellipsis; white-space: nowrap; }
+  .combo-copy .sub { font-size: 0.62rem; }
+  .combo-lead { text-align: right; }
+  .combo-lead strong { display: block; font-size: 0.74rem; }
+  .combo-lead small { display: block; color: var(--muted); font-size: 0.6rem; }
+  .game-history { display: grid; align-content: start; gap: 0.35rem; }
+  .game { display: grid; grid-template-columns: minmax(7rem, 1fr) auto minmax(10rem, 1.2fr) 4.5rem 4.2rem; align-items: center; gap: 0.7rem; padding: 0.4rem 0.45rem; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); text-decoration: none; }
+  .game:hover { border-color: var(--faint); background: var(--panel-2); }
+  .game-date { color: var(--muted); font-size: 0.65rem; }
+  .game-match { color: var(--fg); font-size: 0.7rem; }
+  .game-match small { color: var(--muted); font-size: 0.6rem; text-transform: uppercase; }
+  .game-heroes { display: flex; gap: 0.6rem; }
+  .game-heroes > span { display: flex; align-items: center; gap: 0.25rem; min-width: 0; }
+  .game-heroes small { overflow: hidden; color: var(--muted); font-size: 0.62rem; text-overflow: ellipsis; white-space: nowrap; }
+  .game-lane, .game-kda { text-align: right; color: var(--fg); font-size: 0.7rem; font-variant-numeric: tabular-nums; }
+  .game-lane small, .game-kda small { display: block; color: var(--faint); font-size: 0.58rem; }
+  .history-note { color: var(--muted); font-size: 0.65rem; }
   .method { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 0.7rem; padding: 0.85rem 1rem; }
   .method-icon { color: var(--muted); }
   .method strong { font-size: 0.78rem; }
@@ -203,5 +295,10 @@
     .overview > div { min-height: 5.5rem; padding: 0.75rem; }
     .overview strong { font-size: 1.3rem; }
     .overview .sub { font-size: 0.63rem; }
+    .details-grid { grid-template-columns: 1fr; }
+    .game { grid-template-columns: minmax(6rem, 1fr) auto auto; }
+    .game-heroes { grid-column: 1 / -1; grid-row: 2; }
+    .game-lane { grid-column: 2; grid-row: 1; }
+    .game-kda { grid-column: 3; grid-row: 1; }
   }
 </style>

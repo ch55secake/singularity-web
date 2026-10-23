@@ -85,7 +85,7 @@
             <label>Player
               <select bind:value={selectedMember}>
                 <option value="">All tracked players</option>
-                {#each members as member}<option value={member}>{member}</option>{/each}
+                {#each members as member (member)}<option value={member}>{member}</option>{/each}
               </select>
             </label>
             <label>Rank by

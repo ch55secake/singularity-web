@@ -8,18 +8,18 @@
   <div aria-hidden="true">
     {#if variant === 'list'}
       <div class="panel toolbar-shell">
-        {#each placeholders as _}<span class="line control"></span>{/each}
+        {#each placeholders as placeholder (placeholder)}<span class="line control"></span>{/each}
         <span class="line control short"></span>
       </div>
       <div class="row-list">
-        {#each placeholders as _}
+        {#each placeholders as placeholder (placeholder)}
           <div class="panel row-shell"><span class="line heading"></span><span class="line wide"></span><span class="line medium"></span></div>
         {/each}
       </div>
     {:else if variant === 'cards'}
       <span class="line count"></span>
       <div class="card-grid">
-        {#each placeholders as _}
+        {#each placeholders as placeholder (placeholder)}
           <div class="panel card-shell"><span class="line heading"></span><span class="line medium"></span><span class="line short"></span></div>
         {/each}
       </div>
@@ -31,7 +31,7 @@
     {:else}
       <div class="profile-head"><span class="line short"></span><span class="line title"></span><span class="line medium"></span></div>
       <div class="card-grid metrics">
-        {#each placeholders as _}
+        {#each placeholders as placeholder (placeholder)}
           <div class="panel card-shell"><span class="line short"></span><span class="line score"></span><span class="line medium"></span></div>
         {/each}
       </div>

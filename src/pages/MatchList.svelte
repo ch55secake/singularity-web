@@ -69,7 +69,7 @@
             <summary>{selectedMembers.length ? `${selectedMembers.length} selected` : 'Any friend'}</summary>
             <div class="member-options">
               <span class="filter-hint">Matches with any selected friend</span>
-              {#each memberNames as name}
+              {#each memberNames as name (name)}
                 <label><input type="checkbox" checked={selectedMembers.includes(name)} onchange={(event) => toggleMember(name, event.currentTarget.checked)} />{name}</label>
               {/each}
             </div>
@@ -87,7 +87,7 @@
         <label class="filter-control">Hero
           <select bind:value={selectedHero}>
             <option value="">Any hero</option>
-            {#each heroNames as hero}<option value={hero}>{hero}</option>{/each}
+            {#each heroNames as hero (hero)}<option value={hero}>{hero}</option>{/each}
           </select>
         </label>
         <label class="filter-control">From
@@ -104,7 +104,7 @@
       {#if memberNames.length}
         <nav class="players" aria-label="Player pages">
           <span class="label">Player pages</span>
-          {#each memberNames as name}<a href="/p/{encodeURIComponent(name)}">{name}</a>{/each}
+          {#each memberNames as name (name)}<a href="/p/{encodeURIComponent(name)}">{name}</a>{/each}
         </nav>
       {/if}
     </section>
@@ -133,7 +133,7 @@
                 <span class="sub num">{mmss(m.duration_s)} · Match {m.match_id}</span>
               </div>
               <div class="teams">
-                {#each [0, 1] as const as t}
+                {#each [0, 1] as const as t (t)}
                   <div class="team team-{t}" class:won={m.winning_team === t}>
                     <span class="tname">{TEAMS[t].short}<span class="team-score num">{m.players.filter((p) => p.team === t).reduce((sum, p) => sum + p.kills, 0)}</span>{#if m.winning_team === t}<span class="winner">WIN</span>{/if}</span>
                     <span class="heroes">

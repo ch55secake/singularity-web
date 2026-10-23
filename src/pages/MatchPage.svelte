@@ -142,7 +142,7 @@
     </header>
 
     <div class="tabs" role="tablist" aria-label="Match sections" tabindex="-1" onkeydown={onTabKeydown}>
-      {#each TABS as t}
+      {#each TABS as t (t.id)}
         <button id="match-tab-{t.id}" type="button" role="tab" aria-selected={tab === t.id} aria-controls="match-tabpanel" tabindex={tab === t.id ? 0 : -1} class:active={tab === t.id} onclick={() => selectTab(t.id)}>{t.label}</button>
       {/each}
     </div>

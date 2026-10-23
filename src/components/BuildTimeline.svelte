@@ -43,12 +43,12 @@
     <h3 class="label">Ability points</h3>
     <div class="scroll-x data-scroll" role="region" aria-label="Ability upgrade timeline">
       <table class="num">
-        <thead><tr><th class="l">Ability</th>{#each { length: maxSteps } as _, i}<th>{i === 0 ? 'Unlocked' : `Upgrade ${i}`}</th>{/each}</tr></thead>
+        <thead><tr><th class="l">Ability</th>{#each { length: maxSteps } as _, i (i)}<th>{i === 0 ? 'Unlocked' : `Upgrade ${i}`}</th>{/each}</tr></thead>
         <tbody>
           {#each abilities as a (a.name)}
             <tr>
               <td class="l"><span class="ab">{#if a.icon}<img src={a.icon} alt="" loading="lazy" />{/if}{a.name}</span></td>
-              {#each { length: maxSteps } as _, i}
+              {#each { length: maxSteps } as _, i (i)}
                 <td>{a.steps[i] ? mmss(a.steps[i].t) : ''}</td>
               {/each}
             </tr>

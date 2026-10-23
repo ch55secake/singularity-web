@@ -64,17 +64,17 @@
         <span class="delta num" class:good={d.good === true} class:bad={d.good === false}>{d.text}</span>
       </div>
     {/each}
-    {#each [kills(focused)] as k}
+    {#each [kills(focused)] as k (k.total)}
       <div class="card wide">
         <span class="label">How kills happened</span>
         {#if k.total === 0}
           <span class="sub">No kills this match</span>
         {:else}
           <div class="bar" role="img" aria-label={k.parts.map((x) => `${x.label} ${x.n}`).join(', ')}>
-            {#each k.parts.filter((x) => x.n > 0) as x}<span class={x.cls} style:flex={x.n}></span>{/each}
+            {#each k.parts.filter((x) => x.n > 0) as x (x.cls)}<span class={x.cls} style:flex={x.n}></span>{/each}
           </div>
           <div class="keys num">
-            {#each k.parts as x}<span><i class={x.cls}></i>{x.label} {x.n}</span>{/each}
+            {#each k.parts as x (x.cls)}<span><i class={x.cls}></i>{x.label} {x.n}</span>{/each}
             <span>Headshot kills {focused.kill_types.headshot}</span>
           </div>
         {/if}
@@ -85,12 +85,12 @@
   <h3 class="label all">All players</h3>
   <div class="scroll-x data-scroll" role="region" aria-label="Combat statistics for all players">
     <table class="num">
-      <thead><tr><th class="l">Player</th>{#each stats as s}<th title={s.help}>{s.label}</th>{/each}<th>Kills G/A/M</th></tr></thead>
+      <thead><tr><th class="l">Player</th>{#each stats as s (s.key)}<th title={s.help}>{s.label}</th>{/each}<th>Kills G/A/M</th></tr></thead>
       <tbody>
         {#each rows as p (p.slot)}
           <tr class="team-{p.team}" class:focus={p.slot === focus} onclick={() => (focus = p.slot)}>
             <td class="l"><span class="pl"><HeroIcon hero={p.hero} team={p.team} size={26} />{p.hero.name}{#if p.member}<span class="tag">{p.member.name}</span>{/if}</span></td>
-            {#each stats as s}
+            {#each stats as s (s.key)}
               {@const d = delta(s, p)}
               <td class:good={d.good === true} class:bad={d.good === false}>{s.show(s.value(p))}</td>
             {/each}

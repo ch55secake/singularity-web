@@ -64,7 +64,7 @@
                 <div><span class="label">W–L</span><strong class="num">{session.wins}–{session.losses}</strong>{#if session.splits}<span class="sub">{session.splits} {session.splits === 1 ? 'split' : 'splits'}</span>{/if}</div>
                 <div><span class="label">Win rate</span><strong class="num">{Math.round(session.win_rate * 100)}%</strong><span class="sub">wins / all games</span></div>
                 <div><span class="label">Games</span><strong class="num">{session.matches.length}</strong></div>
-                <div class="friends"><span class="label">Tracked friends</span><div>{#each session.members as member}<span class="friend">{member}</span>{/each}</div></div>
+                <div class="friends"><span class="label">Tracked friends</span><div>{#each session.members as member (member)}<span class="friend">{member}</span>{/each}</div></div>
               </div>
 
               <div class="result-strip" role="img" aria-label={resultSummary(session)}>

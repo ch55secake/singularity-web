@@ -6,6 +6,7 @@ import MatchPage from './pages/MatchPage.svelte'
 import PlayersPage from './pages/PlayersPage.svelte'
 import PlayerPage from './pages/PlayerPage.svelte'
 import SessionsPage from './pages/SessionsPage.svelte'
+import LanesPage from './pages/LanesPage.svelte'
 import Icon from './components/Icon.svelte'
 import StatePanel from './components/StatePanel.svelte'
 import ToastRegion from './components/ToastRegion.svelte'
@@ -13,6 +14,7 @@ import ToastRegion from './components/ToastRegion.svelte'
 const matchUuid = $derived(route.path.match(/^\/m\/([0-9a-f-]{36})\/?$/i)?.[1])
 const playersPage = $derived(/^\/players\/?$/.test(route.path))
 const sessionsPage = $derived(/^\/sessions\/?$/.test(route.path))
+const lanesPage = $derived(/^\/lanes\/?$/.test(route.path))
 const playerPath = $derived(route.path.match(/^\/p\/([^/]+)\/?$/)?.[1])
 const playerName = $derived(playerPath ? decodeURIComponent(playerPath) : null)
 let navOpen = $state(false)
@@ -24,11 +26,12 @@ let commandInput = $state<HTMLInputElement>()
 const commands = $derived([
   { label: 'Matches', detail: 'Browse and filter recent games', href: '/', icon: 'matches' as const },
   { label: 'Sessions', detail: 'Review grouped play sessions', href: '/sessions', icon: 'sessions' as const },
+  { label: 'Lanes', detail: 'Compare tracked-player lane duos', href: '/lanes', icon: 'lanes' as const },
   { label: 'Players', detail: 'Open the player directory', href: '/players', icon: 'players' as const },
   ...(playerName ? [{ label: playerName, detail: 'Return to this player profile', href: `/p/${encodeURIComponent(playerName)}`, icon: 'players' as const }] : []),
 ])
 const filteredCommands = $derived(commands.filter((command) => `${command.label} ${command.detail}`.toLowerCase().includes(commandQuery.trim().toLowerCase())))
-const currentSection = $derived(route.path === '/' ? 'Matches' : sessionsPage ? 'Sessions' : playersPage ? 'Players' : matchUuid ? 'Match details' : playerName ?? 'Singularity')
+const currentSection = $derived(route.path === '/' ? 'Matches' : sessionsPage ? 'Sessions' : lanesPage ? 'Lanes' : playersPage ? 'Players' : matchUuid ? 'Match details' : playerName ?? 'Singularity')
 
 async function openCommand() {
   navOpen = false
@@ -95,6 +98,7 @@ $effect(() => {
       <span class="nav-label">Workspace</span>
       <a href="/" aria-current={route.path === '/' ? 'page' : undefined}><Icon name="matches" size={17} /><span>Matches</span></a>
       <a href="/sessions" aria-current={sessionsPage ? 'page' : undefined}><Icon name="sessions" size={17} /><span>Sessions</span></a>
+      <a href="/lanes" aria-current={lanesPage ? 'page' : undefined}><Icon name="lanes" size={17} /><span>Lanes</span></a>
       <a href="/players" aria-current={playersPage ? 'page' : undefined}><Icon name="players" size={17} /><span>Players</span></a>
       {#if playerName}
         <span class="nav-label context-label">Current</span>
@@ -124,6 +128,8 @@ $effect(() => {
             <MatchList />
           {:else if sessionsPage}
             <SessionsPage />
+          {:else if lanesPage}
+            <LanesPage />
           {:else if matchUuid}
             <MatchPage uuid={matchUuid} />
           {:else if playersPage}

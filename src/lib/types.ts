@@ -157,6 +157,68 @@ export interface LaneStats {
   deaths: LaneDeath[];
 }
 
+export interface LanePairing {
+  members: [string, string];
+  matches: number;
+  result_matches: number;
+  wins: number;
+  match_win_rate: number | null;
+  lane_samples: number;
+  lane_leads: number;
+  lane_ties: number;
+  lane_trails: number;
+  lane_lead_rate: number | null;
+  average_net_worth_lead: number | null;
+  stats_samples: number;
+  average_kills: number | null;
+  average_deaths: number | null;
+  average_assists: number | null;
+  economy_samples: number;
+  average_creep_kills: number | null;
+  average_denies: number | null;
+  damage_samples: number;
+  average_hero_damage: number | null;
+  hero_combinations: LaneHeroCombination[];
+  games: LanePairingGame[];
+  games_truncated: boolean;
+}
+
+export interface LaneHeroCombination {
+  heroes: [Hero, Hero];
+  matches: number;
+  result_matches: number;
+  wins: number;
+  match_win_rate: number | null;
+  lane_samples: number;
+  lane_leads: number;
+  lane_ties: number;
+  lane_trails: number;
+  lane_lead_rate: number | null;
+  average_net_worth_lead: number | null;
+}
+
+export interface LanePairingGame {
+  uuid: string;
+  match_id: number;
+  start_time: number;
+  heroes: [Hero, Hero];
+  match_result: 'win' | 'loss' | null;
+  lane_net_worth_lead: number | null;
+  stats: {
+    kills: number | null;
+    deaths: number | null;
+    assists: number | null;
+    creep_kills: number | null;
+    denies: number | null;
+    hero_damage: number | null;
+  };
+}
+
+export interface LanePairings {
+  lane_phase_end_s: number;
+  pairings: LanePairing[];
+}
+
 export interface ObjectiveEvent {
   t: number;
   /** Owning team for structures; claiming team for the mid-boss. */

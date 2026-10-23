@@ -42,6 +42,18 @@ function fixtureApi(): Plugin {
           }
           return
         }
+        if (url === '/api/lane-pairings' || url === '/api/lane-pairings/') {
+          try {
+            const body = await readFile(join(root, 'lane-pairings.json'))
+            res.setHeader('Content-Type', 'application/json')
+            res.end(body)
+          } catch {
+            res.statusCode = 404
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: 'lane pairings not found' }))
+          }
+          return
+        }
         const laneStats = url.match(/^\/api\/matches\/([0-9a-f-]{36})\/lane-stats\/?$/)
         if (laneStats) {
           const file = join(root, 'lane-stats', `${laneStats[1]}.json`)

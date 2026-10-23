@@ -8,6 +8,10 @@ server {
     # its data on one origin, so there is no CORS and no API URL in the browser.
     location /api/ {
         proxy_pass ${SINGULARITY_API_UPSTREAM};
+        # The platform's read token (SINGULARITY_READ_TOKEN) stays server-side:
+        # nginx adds it here so the browser never sees it. Empty when the
+        # platform runs without one.
+        proxy_set_header Authorization "Bearer ${SINGULARITY_API_TOKEN}";
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }

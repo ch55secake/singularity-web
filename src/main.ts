@@ -1,6 +1,4 @@
 import { mount } from 'svelte'
-import '@fontsource/big-shoulders-display/700.css'
-import '@fontsource/big-shoulders-display/800.css'
 import '@fontsource/public-sans/400.css'
 import '@fontsource/public-sans/500.css'
 import '@fontsource/public-sans/600.css'

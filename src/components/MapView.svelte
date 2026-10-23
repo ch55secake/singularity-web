@@ -2,8 +2,9 @@
   import { onDestroy } from 'svelte'
   import HeroIcon from './HeroIcon.svelte'
   import PlayerPicker from './PlayerPicker.svelte'
+  import Icon from './Icon.svelte'
   import { mmss } from '../lib/format'
-  import type { MatchDetail, Player } from '../lib/types'
+  import type { MatchDetail, ObjectiveEvent, Player } from '../lib/types'
 
   let { match, focus = $bindable() }: { match: MatchDetail; focus: number | null } = $props()
 
@@ -17,6 +18,7 @@
   let speed = $state(16)
   let showTrails = $state(true)
   let showDeaths = $state(true)
+  let showObjectives = $state(true)
   let showHeat = $state(false)
 
   const bySlot = $derived(new Map(match.players.map((p) => [p.slot, p])))
@@ -24,6 +26,79 @@
   const tmax = $derived(Math.min(match.duration_s, (samples - 1) * match.paths.interval_s))
   const deathsSoFar = $derived(match.deaths.filter((d) => d.t <= t))
   const focusedPlayer = $derived(focus === null ? null : bySlot.get(focus) ?? null)
+  type KeyMoment =
+    | { id: string; t: number; kind: 'kill'; killer: Player | null; victim: Player | null }
+    | { id: string; t: number; kind: 'purchase'; player: Player; item: string }
+    | { id: string; t: number; kind: 'objective'; objective: ObjectiveEvent }
+  const keyMoments = $derived.by(() => {
+    const kills: KeyMoment[] = match.deaths.map((death, index) => ({
+      id: `kill-${index}`,
+      t: death.t,
+      kind: 'kill',
+      killer: bySlot.get(death.killer) ?? null,
+      victim: bySlot.get(death.victim) ?? null,
+    }))
+    const purchases: KeyMoment[] = focusedPlayer
+      ? focusedPlayer.build.filter((entry) => entry.kind === 'item').map((entry, index) => ({
+          id: `purchase-${focusedPlayer.slot}-${index}`,
+          t: entry.t,
+          kind: 'purchase',
+          player: focusedPlayer,
+          item: entry.name,
+        }))
+      : []
+    const objectives: KeyMoment[] = match.objectives.map((objective, index) => ({
+      id: `objective-${index}`,
+      t: objective.t,
+      kind: 'objective',
+      objective,
+    }))
+    return [...kills, ...purchases, ...objectives].sort((a, b) => a.t - b.t)
+  })
+
+  const objectiveLabel = (objective: ObjectiveEvent) => ({
+    guardian: 'Guardian',
+    walker: 'Walker',
+    shrine: 'Shrine',
+    base_guardian: 'Base Guardian',
+    patron: 'Patron',
+    patron_core: 'Patron Core',
+    mid_boss: 'Mid Boss',
+  })[objective.kind]
+  const objectiveSymbol = (kind: ObjectiveEvent['kind']) => ({
+    guardian: 'G',
+    walker: 'W',
+    shrine: 'S',
+    base_guardian: 'B',
+    patron: 'P',
+    patron_core: 'C',
+    mid_boss: 'M',
+  })[kind]
+  const objectiveKindForKey = (key: string): ObjectiveEvent['kind'] | null => {
+    if (key === 'mid_boss') return 'mid_boss'
+    if (key.endsWith('_core')) return 'patron_core'
+    if (key.endsWith('_titan')) return 'patron'
+    if (/_tier1_\d+$/.test(key)) return 'guardian'
+    if (/_tier2_\d+$/.test(key)) return 'walker'
+    return null
+  }
+  const objectiveMarkers = $derived.by(() =>
+    Object.entries(match.map.objective_positions ?? {}).flatMap(([key, position]) => {
+      const kind = objectiveKindForKey(key)
+      if (!kind) return []
+      const capturedAt = match.objectives.find((event) => event.position_key === key)?.t ?? null
+      return [{
+        key,
+        kind,
+        team: key === 'mid_boss' ? null : key.startsWith('team1_') ? 1 : 0,
+        position,
+        capturedAt,
+      }]
+    }),
+  )
+  const standingObjectives = $derived(
+    objectiveMarkers.filter((objective) => objective.capturedAt === null || t < objective.capturedAt),
+  )
 
   let canvas: HTMLCanvasElement
   let box: HTMLDivElement
@@ -155,16 +230,38 @@
         ctx.fillText(label, px + r + 4, py + 4)
       }
     }
+
+    if (showObjectives) {
+      for (const objective of standingObjectives) {
+        if (!objective.position || match.map.radius <= 0) continue
+        const [px, py] = toPx(objective.position[0], objective.position[1])
+        const colour = objective.team === null ? '#d7d3ca' : TEAM_COLOURS[objective.team]
+        ctx.beginPath()
+        ctx.arc(px, py, 9, 0, Math.PI * 2)
+        ctx.fillStyle = '#11141a'
+        ctx.fill()
+        ctx.strokeStyle = colour
+        ctx.lineWidth = 2.5
+        ctx.stroke()
+        ctx.fillStyle = colour
+        ctx.font = '700 10px "Public Sans", system-ui, sans-serif'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(objectiveSymbol(objective.kind), px, py)
+        ctx.textAlign = 'start'
+        ctx.textBaseline = 'alphabetic'
+      }
+    }
   }
 
   $effect(() => {
     // Redraw whenever anything the drawing reads changes.
-    void [t, size, img, focus, showTrails, showDeaths, showHeat]
+    void [t, size, img, focus, showTrails, showDeaths, showObjectives, standingObjectives, showHeat]
     draw()
   })
 
   function jump(to: number) { t = Math.max(0, Math.min(tmax, to)); playing = false }
-  const name = (p: Player | undefined) => p ? (p.member ? `${p.member.name} (${p.hero.name})` : p.hero.name) : 'World'
+  const name = (p: Player | null | undefined) => p ? (p.member ? `${p.member.name} (${p.hero.name})` : p.hero.name) : 'World'
 </script>
 
 <section class="panel">
@@ -176,11 +273,11 @@
   <div class="layout">
     <div class="stage">
       <div class="canvas-box" bind:this={box}>
-        <canvas bind:this={canvas} style:width="{size}px" style:height="{size}px" aria-label="Map of player positions at {mmss(t)}"></canvas>
+        <canvas bind:this={canvas} style:width="{size}px" style:height="{size}px" aria-label="Map of player positions at {mmss(t)}. Objective symbols disappear when their structures are taken."></canvas>
         {#if imgFailed}<p class="imgnote">Map image didn’t load, so positions are shown on a blank map.</p>{/if}
       </div>
       <div class="controls">
-        <button class="play" onclick={toggle} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : '▶'}</button>
+        <button class="play" onclick={toggle} aria-label={playing ? 'Pause' : 'Play'}><Icon name={playing ? 'pause' : 'play'} size={16} /></button>
         <input type="range" id="map-time" min="0" max={tmax} step="1" bind:value={t} oninput={() => (playing = false)} aria-label="Match time" />
         <span class="time num">{mmss(t)} / {mmss(tmax)}</span>
         <label class="speed">Speed
@@ -192,28 +289,39 @@
       <div class="toggles">
         <label><input id="map-trails" type="checkbox" bind:checked={showTrails} /> Trails</label>
         <label><input id="map-deaths" type="checkbox" bind:checked={showDeaths} /> Deaths</label>
+        <label><input id="map-objectives" type="checkbox" bind:checked={showObjectives} /> Objectives</label>
         <label><input id="map-heat" type="checkbox" bind:checked={showHeat} /> Heatmap for {focusedPlayer?.hero.name ?? 'selected player'}</label>
       </div>
+      <p class="objective-legend">G Guardian · W Walker · P Patron · C Core · M Mid Boss. Symbols show standing objectives and disappear when taken; color shows the owning team (Mid Boss is neutral).</p>
     </div>
 
     <aside class="feed">
-      <h3 class="label">Kills so far · {deathsSoFar.length}</h3>
+      <h3 class="label">Key moments · {keyMoments.length}</h3>
+      {#if !focusedPlayer}<p class="feed-hint">Select a player above to include their item purchases.</p>{/if}
       <ol>
-        {#each [...deathsSoFar].reverse() as d (d.t + ':' + d.victim)}
-          {@const killer = bySlot.get(d.killer)}
-          {@const victim = bySlot.get(d.victim)}
-          <li class:recent={t - d.t < KILL_FLASH_S}>
-            <button onclick={() => jump(d.t - 4)} title="Jump to 4 seconds before this kill">
+        {#each [...keyMoments].reverse() as d (d.id)}
+          <li class:recent={Math.abs(t - d.t) < KILL_FLASH_S}>
+            <button onclick={() => jump(d.kind === 'kill' ? d.t - 4 : d.t)} title={d.kind === 'kill' ? 'Jump to 4 seconds before this kill' : d.kind === 'objective' ? 'Jump to when this objective was taken' : 'Jump to this item purchase'}>
               <span class="ft num">{mmss(d.t)}</span>
-              {#if killer}<HeroIcon hero={killer.hero} team={killer.team} size={22} />{/if}
-              <span class="kn">{name(killer)}</span>
-              <span class="arrow">→</span>
-              {#if victim}<HeroIcon hero={victim.hero} team={victim.team} size={22} />{/if}
-              <span class="kn">{name(victim)}</span>
+              {#if d.kind === 'kill'}
+                {#if d.killer}<HeroIcon hero={d.killer.hero} team={d.killer.team} size={22} />{/if}
+                <span class="kn">{name(d.killer)}</span>
+                <span class="arrow"><Icon name="arrow-right" size={13} /></span>
+                {#if d.victim}<HeroIcon hero={d.victim.hero} team={d.victim.team} size={22} />{/if}
+                <span class="kn">{name(d.victim)}</span>
+              {:else if d.kind === 'purchase'}
+                <HeroIcon hero={d.player.hero} team={d.player.team} size={22} />
+                <span class="event-kind">BUY</span>
+                <span class="kn">{d.item}</span>
+              {:else}
+                <span class="objective-symbol" class:team0={d.objective.team === 0} class:team1={d.objective.team === 1}>{objectiveSymbol(d.objective.kind)}</span>
+                <span class="event-kind">OBJ</span>
+                <span class="kn">{d.objective.kind === 'mid_boss' ? `Team ${d.objective.team} claimed ${objectiveLabel(d.objective)}` : `Team ${d.objective.team}'s ${objectiveLabel(d.objective)} destroyed`}</span>
+              {/if}
             </button>
           </li>
         {:else}
-          <li class="empty">No kills yet. Press play or drag the slider.</li>
+          <li class="empty"><Icon name="inbox" size={18} />No key moments yet. Select a player above to include item purchases.</li>
         {/each}
       </ol>
     </aside>
@@ -227,15 +335,20 @@
   canvas { display: block; border-radius: 6px; }
   .imgnote { position: absolute; left: 0.75rem; bottom: 0.75rem; font-size: 0.8rem; color: var(--muted); }
   .controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; max-width: 44rem; }
-  .play { width: 2.4rem; height: 2.4rem; border-radius: 50%; border: 1px solid var(--line); background: var(--panel-2); cursor: pointer; font-size: 0.85rem; }
-  .play:hover { border-color: var(--faint); }
+  .play { width: 2.4rem; height: 2.4rem; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: var(--panel-2); cursor: pointer; font-size: 0.85rem; transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out); }
+  .play:hover { border-color: var(--faint); background: color-mix(in srgb, var(--panel-2) 92%, var(--sapphire)); transform: scale(1.04); }
+  .play:active { transform: scale(0.98); }
   input[type='range'] { flex: 1; min-width: 10rem; accent-color: var(--fg); }
   .time { color: var(--muted); font-size: 0.85rem; min-width: 6.5rem; }
   .speed { font-size: 0.85rem; color: var(--muted); display: inline-flex; gap: 0.4rem; align-items: center; }
-  select { background: var(--panel-2); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 0.15rem 0.3rem; }
+  select { min-height: 2rem; background: var(--panel-2); color: var(--fg); border: 1px solid var(--line); border-radius: 7px; padding: 0.25rem 0.45rem; transition: border-color var(--duration-fast) ease; }
+  select:hover { border-color: var(--faint); }
+  input[type='checkbox'] { accent-color: var(--sapphire); }
   .toggles { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; font-size: 0.88rem; color: var(--muted); }
   .toggles label { display: inline-flex; gap: 0.4rem; align-items: center; cursor: pointer; }
+  .objective-legend { max-width: 44rem; color: var(--faint); font-size: 0.72rem; }
   .feed { display: grid; gap: 0.5rem; align-content: start; min-width: 0; }
+  .feed-hint { color: var(--muted); font-size: 0.75rem; }
   .feed ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 40rem; overflow-y: auto; }
   .feed button { width: 100%; display: flex; align-items: center; gap: 0.4rem; background: none; border: 0; padding: 0.3rem 0.4rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; text-align: left; }
   .feed button:hover { background: var(--panel-2); }
@@ -243,6 +356,7 @@
   .ft { color: var(--muted); min-width: 2.6rem; }
   .kn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
   .arrow { color: var(--faint); }
-  .empty { color: var(--muted); font-size: 0.85rem; padding: 0.4rem; }
+  .event-kind { flex: none; color: var(--amber); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.05em; }
+  .empty { display: flex; align-items: center; gap: 0.5rem; color: var(--muted); font-size: 0.85rem; padding: 0.65rem; border: 1px dashed var(--line); border-radius: 6px; }
   @media (max-width: 60rem) { .layout { grid-template-columns: 1fr; } .feed ol { max-height: 18rem; } }
 </style>

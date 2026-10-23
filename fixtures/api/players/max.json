@@ -6,22 +6,36 @@
   "accuracy": 0.483,
   "crit_rate": 0.138,
   "win_rate": 1,
-  "heroes": [{ "id": 15, "name": "Bebop", "matches": 1 }],
-  "recent": [{
-    "uuid": "37bb05cc-27d5-5ae8-8c28-129dd11cd85c",
-    "match_id": 111839173,
-    "start_time": 1791289512,
-    "duration_s": 1910,
-    "winning_team": 0,
-    "team": 0,
-    "hero": {
+  "damage_per_minute": 1361.6230366492146,
+  "average_impact_score": 1.39,
+  "impact_score_matches": 1,
+  "impact_score_version": 1,
+  "heroes": [
+    {
       "id": 15,
       "name": "Bebop",
-      "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/bebop_sm.webp",
-      "card": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/bebop_card.webp"
-    },
-    "kills": 13,
-    "deaths": 3,
-    "assists": 22
-  }]
+      "matches": 1,
+      "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/bebop_sm.webp"
+    }
+  ],
+  "recent": [
+    {
+      "uuid": "37bb05cc-27d5-5ae8-8c28-129dd11cd85c",
+      "match_id": 111839173,
+      "start_time": 1791289512,
+      "duration_s": 1910,
+      "winning_team": 0,
+      "team": 0,
+      "hero": {
+        "id": 15,
+        "name": "Bebop",
+        "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/bebop_sm.webp",
+        "card": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/bebop_card.webp"
+      },
+      "kills": 13,
+      "deaths": 3,
+      "assists": 22,
+      "impact_score": 1.39
+    }
+  ]
 }

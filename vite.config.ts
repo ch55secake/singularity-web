@@ -4,8 +4,8 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-// Serves fixtures/api/* as /api/* during development, until the platform's read
-// API exists. Set SINGULARITY_API=http://192.168.1.110:8080 to proxy instead.
+// Serves fixtures/api/* as /api/* during development. Set
+// SINGULARITY_API=http://192.168.1.110:8080 to proxy a platform instance.
 function fixtureApi(): Plugin {
   const root = join(fileURLToPath(new URL('.', import.meta.url)), 'fixtures', 'api')
   return {
@@ -27,6 +27,44 @@ function fixtureApi(): Plugin {
             res.statusCode = 404
             res.setHeader('Content-Type', 'application/json')
             res.end(JSON.stringify({ error: 'player not found' }))
+          }
+          return
+        }
+        if (url === '/api/sessions' || url === '/api/sessions/') {
+          try {
+            const body = await readFile(join(root, 'sessions.json'))
+            res.setHeader('Content-Type', 'application/json')
+            res.end(body)
+          } catch {
+            res.statusCode = 404
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: 'sessions not found' }))
+          }
+          return
+        }
+        if (url === '/api/lane-pairings' || url === '/api/lane-pairings/') {
+          try {
+            const body = await readFile(join(root, 'lane-pairings.json'))
+            res.setHeader('Content-Type', 'application/json')
+            res.end(body)
+          } catch {
+            res.statusCode = 404
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: 'lane pairings not found' }))
+          }
+          return
+        }
+        const laneStats = url.match(/^\/api\/matches\/([0-9a-f-]{36})\/lane-stats\/?$/)
+        if (laneStats) {
+          const file = join(root, 'lane-stats', `${laneStats[1]}.json`)
+          try {
+            const body = await readFile(file)
+            res.setHeader('Content-Type', 'application/json')
+            res.end(body)
+          } catch {
+            res.statusCode = 404
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: 'lane stats not found' }))
           }
           return
         }

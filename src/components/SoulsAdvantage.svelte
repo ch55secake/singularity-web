@@ -51,6 +51,8 @@
         <defs>
           <clipPath id="above"><rect x={L} y={T} width={W - L - R} height={y(0) - T} /></clipPath>
           <clipPath id="below"><rect x={L} y={y(0)} width={W - L - R} height={H - B - y(0)} /></clipPath>
+          <linearGradient id="amber-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--amber)" stop-opacity="0.42"/><stop offset="1" stop-color="var(--amber)" stop-opacity="0.06"/></linearGradient>
+          <linearGradient id="sapphire-area" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="var(--sapphire)" stop-opacity="0.42"/><stop offset="1" stop-color="var(--sapphire)" stop-opacity="0.06"/></linearGradient>
         </defs>
         {#each ticks as v}
           <line x1={L} x2={W - R} y1={y(v)} y2={y(v)} class:zero={v === 0} />
@@ -59,8 +61,8 @@
         {#each xticks as t}
           <text x={x(t)} y={H - 8} text-anchor="middle">{t / 60}m</text>
         {/each}
-        <path d={area} clip-path="url(#above)" fill="var(--amber)" opacity="0.22" />
-        <path d={area} clip-path="url(#below)" fill="var(--sapphire)" opacity="0.22" />
+        <path class="area" d={area} clip-path="url(#above)" fill="url(#amber-area)" />
+        <path class="area" d={area} clip-path="url(#below)" fill="url(#sapphire-area)" />
         <polyline points={line} clip-path="url(#above)" stroke="var(--amber)" />
         <polyline points={line} clip-path="url(#below)" stroke="var(--sapphire)" />
         {#if hover !== null}
@@ -70,7 +72,7 @@
       </svg>
       {#if hover !== null}
         {@const i = hover}
-        <div class="tip num" style:left="{(x(times[i]) / W) * 100}%">
+        <div class="tip num" class:left={x(times[i]) < W * 0.18} class:right={x(times[i]) > W * 0.82} style:left="{(x(times[i]) / W) * 100}%">
           <strong>{mmss(times[i])}</strong>
           <span class="team-0"><i></i>{TEAMS[0].short}: {fmt(totals[0][i])}</span>
           <span class="team-1"><i></i>{TEAMS[1].short}: {fmt(totals[1][i])}</span>
@@ -86,17 +88,22 @@
   .legend { display: flex; gap: 1rem; font-size: 0.82rem; color: var(--muted); }
   .legend span, .tip span { display: inline-flex; align-items: center; gap: 0.4rem; }
   i { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--team); display: inline-block; }
-  .chart { position: relative; }
+  .chart { position: relative; padding: 0.25rem; border-radius: 7px; background: linear-gradient(180deg, rgb(255 255 255 / 0.018), transparent); }
   svg { display: block; width: 100%; height: auto; touch-action: none; }
   line { stroke: var(--line); stroke-width: 1; }
   line.zero { stroke: var(--faint); }
   line.cross { stroke: var(--muted); stroke-dasharray: 3 3; }
-  polyline { fill: none; stroke-width: 2; stroke-linejoin: round; }
+  polyline { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1200; animation: line-draw 700ms var(--ease-out) both; }
+  .area { animation: area-in 500ms var(--ease-out) both; }
   text { fill: var(--muted); font-size: 11px; font-family: var(--body); font-variant-numeric: tabular-nums; }
   .tip {
     position: absolute; top: 0; transform: translateX(-50%); pointer-events: none;
     display: grid; gap: 0.1rem; padding: 0.45rem 0.65rem; font-size: 0.8rem; white-space: nowrap;
     background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 6px 18px rgb(0 0 0 / 0.35);
   }
+  .tip.left { transform: translateX(-10%); }
+  .tip.right { transform: translateX(-90%); }
   .note { margin-top: 0.75rem; color: var(--muted); font-size: 0.85rem; }
+  @keyframes line-draw { from { stroke-dashoffset: 1200; } to { stroke-dashoffset: 0; } }
+  @keyframes area-in { from { opacity: 0; } }
 </style>

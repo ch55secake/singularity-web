@@ -15,8 +15,8 @@ function fixtureApi(): Plugin {
         const url = req.url?.split('?')[0] ?? ''
         const player = url.match(/^\/api\/players\/by-name\/([^/]+)\/?$/)
         if (player) {
-          let name = ''
-          try { name = decodeURIComponent(player[1]) } catch { name = '' }
+          let name: string
+          try { name = decodeURIComponent(player[1]) } catch { return next() }
           if (!/^[A-Za-z0-9 _.-]{1,64}$/.test(name)) return next()
           const file = join(root, 'players', `${name}.json`)
           try {

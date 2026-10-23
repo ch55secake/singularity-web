@@ -54,11 +54,11 @@
           <linearGradient id="amber-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--amber)" stop-opacity="0.42"/><stop offset="1" stop-color="var(--amber)" stop-opacity="0.06"/></linearGradient>
           <linearGradient id="sapphire-area" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="var(--sapphire)" stop-opacity="0.42"/><stop offset="1" stop-color="var(--sapphire)" stop-opacity="0.06"/></linearGradient>
         </defs>
-        {#each ticks as v}
+        {#each ticks as v (v)}
           <line x1={L} x2={W - R} y1={y(v)} y2={y(v)} class:zero={v === 0} />
           <text x={L - 8} y={y(v) + 4} text-anchor="end">{v === 0 ? 'Even' : compact(Math.abs(v))}</text>
         {/each}
-        {#each xticks as t}
+        {#each xticks as t (t)}
           <text x={x(t)} y={H - 8} text-anchor="middle">{t / 60}m</text>
         {/each}
         <path class="area" d={area} clip-path="url(#above)" fill="url(#amber-area)" />

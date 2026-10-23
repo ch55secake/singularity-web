@@ -8,7 +8,7 @@ RUN --mount=type=cache,target=/root/.npm npm ci
 COPY index.html vite.config.ts svelte.config.js tsconfig.json tsconfig.app.json tsconfig.node.json ./
 COPY public ./public
 COPY src ./src
-RUN --mount=type=cache,target=/root/.npm npm run build
+RUN npm run build
 
 FROM nginx:1.29-alpine
 # The nginx image runs envsubst on templates at startup, filling in the API upstream.

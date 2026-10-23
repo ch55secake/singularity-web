@@ -44,7 +44,7 @@
   <div class="scroll-x data-scroll" role="region" aria-label="Scoreboard statistics">
     <table class="num">
       <thead>
-        <tr><th class="who">Player</th>{#each cols as c}<th title={c.title}>{c.label}</th>{/each}</tr>
+        <tr><th class="who">Player</th>{#each cols as c (c.key)}<th title={c.title}>{c.label}</th>{/each}</tr>
       </thead>
       {#each teams as { t, players } (t)}
         <tbody class="team-{t}">
@@ -60,7 +60,7 @@
                   </span>
                 </button>
               </td>
-              {#each cols as c}
+              {#each cols as c (c.key)}
                 <td class:best={c.value(p) === bests[c.key]}
                   class:positive={c.key === 'impact' && p.impact.score > 0}
                   class:negative={c.key === 'impact' && p.impact.score < 0}

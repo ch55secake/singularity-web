@@ -282,7 +282,7 @@
         <span class="time num">{mmss(t)} / {mmss(tmax)}</span>
         <label class="speed">Speed
           <select id="map-speed" bind:value={speed}>
-            {#each [4, 8, 16, 32, 64] as s}<option value={s}>{s}×</option>{/each}
+            {#each [4, 8, 16, 32, 64] as s (s)}<option value={s}>{s}×</option>{/each}
           </select>
         </label>
       </div>

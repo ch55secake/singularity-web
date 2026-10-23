@@ -2,6 +2,8 @@
   import { listMatches } from '../lib/api'
   import { TEAMS, ago, mmss, ratio, when } from '../lib/format'
   import HeroIcon from '../components/HeroIcon.svelte'
+  import LoadingSkeleton from '../components/LoadingSkeleton.svelte'
+  import StatePanel from '../components/StatePanel.svelte'
   import type { MatchSummary } from '../lib/types'
 
   const load = listMatches()
@@ -54,49 +56,51 @@
   </header>
 
   {#await load}
-    <p class="state">Loading matches…</p>
+    <LoadingSkeleton variant="list" label="Loading matches" />
   {:then matches}
     {@const visibleMatches = filteredMatches(matches)}
     {@const memberNames = [...new Set(matches.flatMap((m) => m.players.flatMap((p) => p.member ? [p.member.name] : [])))].sort()}
     {@const heroNames = [...new Set(matches.flatMap((m) => m.players.map((p) => p.hero.name)))].sort()}
     <section class="toolbar panel">
-      <fieldset class="member-filter">
-        <legend>Friends</legend>
-        <details>
-          <summary>{selectedMembers.length ? `${selectedMembers.length} selected` : 'Any friend'}</summary>
-          <div class="member-options">
-            {#each memberNames as name}
-              <label><input type="checkbox" checked={selectedMembers.includes(name)} onchange={(event) => toggleMember(name, event.currentTarget.checked)} />{name}</label>
-            {/each}
-          </div>
-        </details>
-        <span class="filter-hint">matches with any selected friend</span>
-      </fieldset>
-      <label class="filter-control">Group result
-        <select bind:value={selectedResult}>
-          <option value="">Any result</option>
-          <option value="win">Group win</option>
-          <option value="loss">Group loss</option>
-          <option value="split">Split</option>
-          <option value="none">No friends</option>
-        </select>
-      </label>
-      <label class="filter-control">Hero
-        <select bind:value={selectedHero}>
-          <option value="">Any hero</option>
-          {#each heroNames as hero}<option value={hero}>{hero}</option>{/each}
-        </select>
-      </label>
-      <label class="filter-control">From
-        <input type="date" bind:value={dateFrom} />
-      </label>
-      <label class="filter-control">To
-        <input type="date" bind:value={dateTo} />
-      </label>
-      {#if selectedMembers.length || selectedResult || selectedHero || dateFrom || dateTo}
-        <button class="clear" type="button" onclick={clearFilters}>Clear filters</button>
-      {/if}
-      <span class="sub count" aria-live="polite">{visibleMatches.length} of {matches.length} matches</span>
+      <div class="filters">
+        <fieldset class="member-filter">
+          <legend>Friends</legend>
+          <details>
+            <summary>{selectedMembers.length ? `${selectedMembers.length} selected` : 'Any friend'}</summary>
+            <div class="member-options">
+              <span class="filter-hint">Matches with any selected friend</span>
+              {#each memberNames as name}
+                <label><input type="checkbox" checked={selectedMembers.includes(name)} onchange={(event) => toggleMember(name, event.currentTarget.checked)} />{name}</label>
+              {/each}
+            </div>
+          </details>
+        </fieldset>
+        <label class="filter-control">Group result
+          <select bind:value={selectedResult}>
+            <option value="">Any result</option>
+            <option value="win">Group win</option>
+            <option value="loss">Group loss</option>
+            <option value="split">Split</option>
+            <option value="none">No friends</option>
+          </select>
+        </label>
+        <label class="filter-control">Hero
+          <select bind:value={selectedHero}>
+            <option value="">Any hero</option>
+            {#each heroNames as hero}<option value={hero}>{hero}</option>{/each}
+          </select>
+        </label>
+        <label class="filter-control">From
+          <input type="date" bind:value={dateFrom} />
+        </label>
+        <label class="filter-control">To
+          <input type="date" bind:value={dateTo} />
+        </label>
+        {#if selectedMembers.length || selectedResult || selectedHero || dateFrom || dateTo}
+          <button class="clear" type="button" onclick={clearFilters}>Clear filters</button>
+        {/if}
+        <span class="sub count" aria-live="polite">{visibleMatches.length} of {matches.length} matches</span>
+      </div>
       {#if memberNames.length}
         <nav class="players" aria-label="Player pages">
           <span class="label">Player pages</span>
@@ -106,15 +110,9 @@
     </section>
 
     {#if matches.length === 0}
-      <section class="panel state">
-        <h2>No matches yet</h2>
-        <p>Matches appear here a few minutes after someone in the group finishes a game with the ingest app running.</p>
-      </section>
+      <StatePanel title="No matches yet" message="Matches appear a few minutes after someone finishes a game with the ingest app running." />
     {:else if visibleMatches.length === 0}
-      <section class="panel state">
-        <h2>No matches for these filters</h2>
-        <p>Try different friends, results, heroes, or dates.</p>
-      </section>
+      <StatePanel title="No matching games" message="Try different friends, results, heroes, or dates." actionLabel="Clear filters" onaction={clearFilters} />
     {:else}
       <ol class="list">
         {#each visibleMatches as m (m.uuid)}
@@ -176,7 +174,7 @@
       </ol>
     {/if}
   {:catch err}
-    <section class="panel state"><h2>Couldn’t load matches</h2><p>{err.message}</p></section>
+    <StatePanel kind="error" title="Couldn’t load matches" message={err.message} actionLabel="Try again" onaction={() => location.reload()} />
   {/await}
 </div>
 
@@ -185,33 +183,42 @@
   .intro { display: grid; gap: 0.35rem; }
   h1 { font-family: var(--display); font-weight: 800; font-size: clamp(2.2rem, 5vw, 3rem); line-height: 1; text-transform: uppercase; letter-spacing: 0.02em; }
   .intro p, .sub { color: var(--muted); }
-  .state { display: grid; gap: 0.4rem; color: var(--muted); }
-  .state h2 { color: var(--fg); font-size: 1.1rem; }
-  .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 0.65rem 0.9rem; }
-  .toolbar > label, .member-filter { color: var(--muted); font-size: 0.82rem; }
+  .toolbar { display: grid; gap: 0.9rem; }
+  .filters { display: flex; align-items: end; flex-wrap: wrap; gap: 0.65rem 0.9rem; }
+  .filters > label, .member-filter { color: var(--muted); font-size: 0.78rem; font-weight: 600; }
   .member-filter { display: grid; gap: 0.25rem; margin: 0; padding: 0; border: 0; }
   .member-filter legend { padding: 0; }
   .member-filter details { position: relative; }
-  .member-filter summary { color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 0.35rem 0.5rem; cursor: pointer; list-style-position: inside; }
+  .member-filter summary { min-height: 2.35rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 7px; padding: 0.45rem 0.65rem; cursor: pointer; list-style: none; transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease; }
+  .member-filter summary::-webkit-details-marker { display: none; }
+  .member-filter summary::after { content: ''; width: 0.42rem; height: 0.42rem; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg) translateY(-2px); transition: transform var(--duration-fast) var(--ease-out); }
+  .member-filter details[open] summary::after { transform: rotate(225deg) translate(-1px, -1px); }
+  .member-filter summary:hover { border-color: var(--faint); background: color-mix(in srgb, var(--panel-2) 94%, white); }
   .member-options { position: absolute; z-index: 2; top: calc(100% + 0.25rem); left: 0; display: grid; gap: 0.35rem; min-width: 14rem; max-height: 16rem; overflow: auto; padding: 0.6rem; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 0.5rem 1.5rem #0008; }
-  .member-options label { display: flex; align-items: center; gap: 0.5rem; padding: 0.2rem; color: var(--fg); cursor: pointer; }
+  .member-options label { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.4rem; border-radius: 5px; color: var(--fg); cursor: pointer; transition: background var(--duration-fast) ease; }
+  .member-options label:hover { background: rgb(255 255 255 / 0.045); }
   .member-options input { accent-color: var(--member); }
-  .filter-hint { color: var(--faint); font-size: 0.68rem; }
+  .filter-hint { padding: 0.1rem 0.4rem 0.3rem; color: var(--faint); font-size: 0.68rem; font-weight: 500; }
   .filter-control { display: grid; gap: 0.25rem; }
-  select { color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 0.35rem 0.5rem; }
-  input[type='date'] { color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 0.3rem 0.4rem; }
-  .clear { align-self: end; padding: 0.35rem 0; border: 0; background: none; color: var(--member); cursor: pointer; }
-  .clear:hover { text-decoration: underline; }
-  .count { align-self: end; }
-  .players { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0.35rem 0.7rem; margin-left: auto; }
+  select, input[type='date'] { min-height: 2.35rem; color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 7px; padding: 0.4rem 0.65rem; transition: border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease; }
+  select:hover, input[type='date']:hover { border-color: var(--faint); }
+  select:focus, input[type='date']:focus { border-color: color-mix(in srgb, var(--sapphire) 70%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--sapphire) 13%, transparent); }
+  .clear { min-height: 2.35rem; align-self: end; padding: 0.4rem 0.7rem; border: 1px solid color-mix(in srgb, var(--member) 28%, var(--line)); border-radius: 7px; background: color-mix(in srgb, var(--member) 7%, transparent); color: var(--member); cursor: pointer; transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out); }
+  .clear:hover { border-color: color-mix(in srgb, var(--member) 55%, var(--line)); background: color-mix(in srgb, var(--member) 12%, transparent); transform: translateY(-1px); }
+  .clear:active { transform: none; }
+  .count { min-height: 2.35rem; display: inline-flex; align-items: center; margin-left: auto; }
+  .players { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0.35rem 0.7rem; padding-top: 0.85rem; border-top: 1px solid var(--line); }
   .players a { color: var(--member); font-weight: 600; text-decoration: none; }
   .players a:hover { text-decoration: underline; }
   .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
   .row {
     display: grid; grid-template-columns: 7rem minmax(0, 1.3fr) minmax(0, 1fr); gap: 1rem 1.5rem; align-items: center;
-    text-decoration: none; transition: border-color 0.15s, background 0.15s;
+    text-decoration: none; transform: translateY(0); transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease, box-shadow var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out);
   }
-  .row:hover { border-color: var(--faint); background: var(--panel-2); }
+  .row:hover, .row:focus-visible { border-color: #3b3d45; background: #111216; box-shadow: none; transform: translateY(-1px); }
+  .row:active { transform: translateY(0) scale(0.997); }
+  .row :global(.icon) { transition: transform var(--duration-fast) var(--ease-out), filter var(--duration-fast) ease; }
+  .row:hover :global(.icon), .row:focus-visible :global(.icon) { transform: translateY(-1px); filter: saturate(1.12) brightness(1.05); }
   .meta { display: grid; align-content: center; gap: 0.3rem; }
   .meta-top { display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; }
   .mode { font-family: var(--display); font-weight: 800; font-size: 1.6rem; line-height: 1; }

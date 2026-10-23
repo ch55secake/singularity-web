@@ -1,0 +1,36 @@
+{
+  "uuid": "cd91fc9a-fd82-538a-8fa8-da8941174f89",
+  "match_id": 113390164,
+  "lane_phase_end_s": 600,
+  "players": [
+    { "slot": 8, "team": 1, "hero": { "id": 76, "name": "Graves", "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/necro_sm.webp", "card": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/necro_card.webp" }, "snapshot_time_s": 540, "kills": 2, "deaths": 1, "assists": 5, "creep_kills": 31, "neutral_kills": 4, "denies": 1, "hero_damage": 8219, "souls": { "net_worth": 34000, "player": 900, "player_orbs": 150, "lane_creeps": 2100, "lane_creep_orbs": 550, "neutral_creeps": 750, "neutral_creep_orbs": 150, "boss": 0, "boss_orbs": 0, "treasure": 0, "denied": 60, "lost_on_death": 100 } },
+    { "slot": 4, "team": 0, "hero": { "id": 1, "name": "Infernus", "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/inferno_sm.webp", "card": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/inferno_card.webp" }, "snapshot_time_s": 540, "kills": 2, "deaths": 4, "assists": 2, "creep_kills": 24, "neutral_kills": 1, "denies": 2, "hero_damage": 8019, "souls": { "net_worth": 34000, "player": 600, "player_orbs": 100, "lane_creeps": 1700, "lane_creep_orbs": 400, "neutral_creeps": 250, "neutral_creep_orbs": 50, "boss": 0, "boss_orbs": 0, "treasure": 0, "denied": 100, "lost_on_death": 200 } },
+    { "slot": 7, "team": 1, "hero": { "id": 12, "name": "Kelvin", "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/kelvin_sm.webp", "card": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/kelvin_card.webp" }, "snapshot_time_s": 540, "kills": 2, "deaths": 1, "assists": 5, "creep_kills": 28, "neutral_kills": 2, "denies": 1, "hero_damage": 9606, "souls": { "net_worth": 34000, "player": 800, "player_orbs": 120, "lane_creeps": 1950, "lane_creep_orbs": 500, "neutral_creeps": 400, "neutral_creep_orbs": 100, "boss": 0, "boss_orbs": 0, "treasure": 0, "denied": 50, "lost_on_death": 100 } },
+    { "slot": 3, "team": 0, "hero": { "id": 72, "name": "Billy", "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/punkgoat_sm.webp", "card": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/punkgoat_card.webp" }, "snapshot_time_s": 540, "kills": 1, "deaths": 4, "assists": 3, "creep_kills": 22, "neutral_kills": 1, "denies": 0, "hero_damage": 10075, "souls": { "net_worth": 34000, "player": 450, "player_orbs": 90, "lane_creeps": 1550, "lane_creep_orbs": 350, "neutral_creeps": 300, "neutral_creep_orbs": 50, "boss": 0, "boss_orbs": 0, "treasure": 0, "denied": 0, "lost_on_death": 250 } },
+    { "slot": 5, "team": 1, "hero": { "id": 19, "name": "Shiv", "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/shiv_sm.webp", "card": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/shiv_card.webp" }, "snapshot_time_s": 540, "kills": 4, "deaths": 1, "assists": 4, "creep_kills": 35, "neutral_kills": 3, "denies": 2, "hero_damage": 10139, "souls": { "net_worth": 34000, "player": 1250, "player_orbs": 200, "lane_creeps": 2300, "lane_creep_orbs": 650, "neutral_creeps": 600, "neutral_creep_orbs": 120, "boss": 0, "boss_orbs": 0, "treasure": 0, "denied": 80, "lost_on_death": 100 } },
+    { "slot": 2, "team": 0, "hero": { "id": 79, "name": "Rem", "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/familiar_sm.webp", "card": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/familiar_card.webp" }, "snapshot_time_s": 540, "kills": 1, "deaths": 3, "assists": 2, "creep_kills": 19, "neutral_kills": 1, "denies": 1, "hero_damage": 9000, "souls": { "net_worth": 34000, "player": 350, "player_orbs": 60, "lane_creeps": 1350, "lane_creep_orbs": 250, "neutral_creeps": 250, "neutral_creep_orbs": 50, "boss": 0, "boss_orbs": 0, "treasure": 0, "denied": 40, "lost_on_death": 200 } },
+    { "slot": 6, "team": 1, "hero": { "id": 80, "name": "Silver", "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/werewolf_sm.webp", "card": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/werewolf_card.webp" }, "snapshot_time_s": 540, "kills": 3, "deaths": 2, "assists": 6, "creep_kills": 27, "neutral_kills": 2, "denies": 0, "hero_damage": 8035, "souls": { "net_worth": 34000, "player": 1000, "player_orbs": 180, "lane_creeps": 1850, "lane_creep_orbs": 450, "neutral_creeps": 500, "neutral_creep_orbs": 90, "boss": 0, "boss_orbs": 0, "treasure": 0, "denied": 0, "lost_on_death": 150 } },
+    { "slot": 1, "team": 0, "hero": { "id": 77, "name": "Vindicta", "icon": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/hornet_sm.webp", "card": "https://assets-bucket.deadlock-api.com/assets-api-res/images/heroes/hornet_card.webp" }, "snapshot_time_s": 540, "kills": 2, "deaths": 1, "assists": 2, "creep_kills": 26, "neutral_kills": 1, "denies": 3, "hero_damage": 9864, "souls": { "net_worth": 34000, "player": 700, "player_orbs": 120, "lane_creeps": 1800, "lane_creep_orbs": 500, "neutral_creeps": 300, "neutral_creep_orbs": 60, "boss": 0, "boss_orbs": 0, "treasure": 0, "denied": 150, "lost_on_death": 100 } }
+  ],
+  "deaths": [
+    { "t": 88, "victim": 3, "killer": 6 },
+    { "t": 105, "victim": 7, "killer": 2 },
+    { "t": 111, "victim": 2, "killer": 5 },
+    { "t": 131, "victim": 4, "killer": 6 },
+    { "t": 136, "victim": 6, "killer": 1 },
+    { "t": 171, "victim": 8, "killer": 1 },
+    { "t": 177, "victim": 5, "killer": 4 },
+    { "t": 204, "victim": 6, "killer": 4 },
+    { "t": 297, "victim": 4, "killer": 8 },
+    { "t": 311, "victim": 3, "killer": 5 },
+    { "t": 332, "victim": 2, "killer": 6 },
+    { "t": 356, "victim": 6, "killer": 3 },
+    { "t": 359, "victim": 8, "killer": 1 },
+    { "t": 365, "victim": 7, "killer": 4 },
+    { "t": 446, "victim": 4, "killer": 5 },
+    { "t": 460, "victim": 3, "killer": 6 },
+    { "t": 462, "victim": 2, "killer": 5 },
+    { "t": 568, "victim": 4, "killer": 8 },
+    { "t": 571, "victim": 3, "killer": 7 }
+  ]
+}

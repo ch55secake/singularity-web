@@ -11,6 +11,8 @@ match gets its own page at `/m/<uuid>` with a Leetify-style breakdown:
 - **Map:** a replay of every player's position with trails, kill markers, a heatmap for
   the selected player and a kill feed. `?t=<seconds>` opens it at a moment.
 - **Builds:** items in the order bought and when each ability was unlocked and upgraded
+- **Lanes:** tracked-player duos ranked by 10-minute assigned-lane net-worth lead, with
+  whole-match win rate shown separately
 
 Clicking a player anywhere selects them across all tabs.
 The match list can be filtered by group member and links to each member's player
@@ -32,8 +34,8 @@ SINGULARITY_API=http://192.168.1.110:8080 npm run dev
 
 ## Data
 
-The app reads `GET /api/matches`, `GET /api/matches/{uuid}`, and
-`GET /api/players/by-name/{name}` from the same origin.
+The app reads match, lane, lane-pairing, session, and player data from the platform
+read API on the same origin.
 [`API.md`](API.md) is the contract for singularity-platform, and `src/lib/types.ts`
 has the exact field names.
 

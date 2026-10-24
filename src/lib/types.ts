@@ -86,6 +86,7 @@ export interface BuildEntry {
 }
 
 export interface Player extends PlayerSummary {
+  assigned_lane?: number | null;
   souls: number;
   last_hits: number;
   denies: number;

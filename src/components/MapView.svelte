@@ -5,7 +5,7 @@
   import Icon from './Icon.svelte'
   import { uniqueItemPurchases } from '../lib/build'
   import { mmss } from '../lib/format'
-  import type { BuildEntry, MatchDetail, ObjectiveEvent, Player } from '../lib/types'
+  import type { BuildEntry, MatchDetail, ObjectiveEvent, Path, Player } from '../lib/types'
 
   let { match, focus = $bindable() }: { match: MatchDetail; focus: number | null } = $props()
 
@@ -13,6 +13,7 @@
   const TRAIL_S = 12
   const KILL_FLASH_S = 6
   const LANE_PHASE_END_S = 600
+  const LANE_ZOOM = 2.4
 
   // ?t=600 opens the replay at that second, so a moment can be shared as a link.
   let t = $state(Math.max(0, Number(new URLSearchParams(location.search).get('t')) || 0))
@@ -30,11 +31,22 @@
   const playbackEnd = $derived(laneOnly ? Math.min(replayEnd, LANE_PHASE_END_S) : replayEnd)
   const deathsSoFar = $derived(match.deaths.filter((d) => d.t <= t))
   const focusedPlayer = $derived(focus === null ? null : bySlot.get(focus) ?? null)
+  const lanePlayerSlots = $derived.by(() => {
+    if (!laneOnly) return new Set(match.players.map((player) => player.slot))
+    if (focusedPlayer?.assigned_lane == null) return new Set(focusedPlayer ? [focusedPlayer.slot] : [])
+    return new Set(match.players
+      .filter((player) => player.assigned_lane === focusedPlayer.assigned_lane)
+      .map((player) => player.slot))
+  })
+  const playersInView = $derived(match.players.filter((player) => lanePlayerSlots.has(player.slot)))
+  const deathsInView = $derived(deathsSoFar.filter((death) =>
+    lanePlayerSlots.has(death.killer) || lanePlayerSlots.has(death.victim),
+  ))
   type KeyMoment =
     | { id: string; t: number; kind: 'kill'; killer: Player | null; victim: Player | null }
     | { id: string; t: number; kind: 'purchase'; player: Player; item: BuildEntry }
     | { id: string; t: number; kind: 'objective'; objective: ObjectiveEvent }
-  const keyMoments = $derived.by(() => {
+  const allKeyMoments = $derived.by(() => {
     const kills: KeyMoment[] = match.deaths.map((death, index) => ({
       id: `kill-${index}`,
       t: death.t,
@@ -59,7 +71,19 @@
     }))
     return [...kills, ...purchases, ...objectives].sort((a, b) => a.t - b.t)
   })
+  const keyMoments = $derived.by(() => {
+    if (!laneOnly) return allKeyMoments
+    return allKeyMoments.filter((moment) => {
+      if (moment.kind === 'purchase') return lanePlayerSlots.has(moment.player.slot)
+      if (moment.kind === 'kill') {
+        return (moment.killer !== null && lanePlayerSlots.has(moment.killer.slot))
+          || (moment.victim !== null && lanePlayerSlots.has(moment.victim.slot))
+      }
+      return false
+    })
+  })
   const liveMoments = $derived(keyMoments.filter((moment) => moment.t <= t).reverse())
+  const followedName = $derived(focusedPlayer?.member?.name ?? focusedPlayer?.hero.name ?? 'Player')
 
   const objectiveLabel = (objective: ObjectiveEvent) => ({
     guardian: 'Guardian',
@@ -143,9 +167,19 @@
   }
   onDestroy(() => cancelAnimationFrame(raf))
 
-  function toPx(x: number, y: number): [number, number] {
+  function worldToPx(x: number, y: number): [number, number] {
     const r = match.map.radius
     return [((x + r) / (2 * r)) * size, ((r - y) / (2 * r)) * size]
+  }
+
+  function lastAlivePosition(path: Path | undefined, index: number): [number, number] | null {
+    if (!path) return null
+    for (let sample = Math.min(index, path.x.length - 1); sample >= 0; sample--) {
+      if (path.health[sample] && Number.isFinite(path.x[sample]) && Number.isFinite(path.y[sample])) {
+        return [path.x[sample], path.y[sample]]
+      }
+    }
+    return null
   }
 
   function draw() {
@@ -157,13 +191,27 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.fillStyle = '#11141a'
     ctx.fillRect(0, 0, size, size)
+    const i = Math.min(samples - 1, Math.floor(t / match.paths.interval_s))
+    const followedPath = focusedPlayer ? match.paths.players[focusedPlayer.slot] : undefined
+    const cameraPosition = laneOnly ? lastAlivePosition(followedPath, i) : null
+    const zoom = cameraPosition ? LANE_ZOOM : 1
+    const cameraCenter = cameraPosition ? worldToPx(cameraPosition[0], cameraPosition[1]) : [size / 2, size / 2]
+    const imageLeft = cameraPosition
+      ? Math.max(size - size * zoom, Math.min(0, size / 2 - cameraCenter[0] * zoom))
+      : 0
+    const imageTop = cameraPosition
+      ? Math.max(size - size * zoom, Math.min(0, size / 2 - cameraCenter[1] * zoom))
+      : 0
+    const project = (x: number, y: number): [number, number] => {
+      const [px, py] = worldToPx(x, y)
+      return cameraPosition ? [imageLeft + px * zoom, imageTop + py * zoom] : [px, py]
+    }
     if (img) {
       // The minimap art is very dark; lift it so the lanes read on the dark page.
       ctx.filter = 'brightness(2.6) contrast(1.1)'
-      ctx.drawImage(img, 0, 0, size, size)
+      ctx.drawImage(img, imageLeft, imageTop, size * zoom, size * zoom)
       ctx.filter = 'none'
     }
-    const i = Math.min(samples - 1, Math.floor(t / match.paths.interval_s))
 
     if (showHeat && focusedPlayer) {
       const path = match.paths.players[focusedPlayer.slot]
@@ -171,20 +219,20 @@
       ctx.globalAlpha = 0.05
       for (let j = 0; j <= i && j < path.x.length; j++) {
         if (!path.health[j]) continue
-        const [px, py] = toPx(path.x[j], path.y[j])
+        const [px, py] = project(path.x[j], path.y[j])
         ctx.beginPath(); ctx.arc(px, py, Math.max(4, size / 90), 0, Math.PI * 2); ctx.fill()
       }
       ctx.globalAlpha = 1
     }
 
     if (showDeaths) {
-      for (const d of deathsSoFar) {
+      for (const d of deathsInView) {
         const victim = bySlot.get(d.victim)
         if (!victim) continue
-        const [vx, vy] = toPx(d.victim_pos[0], d.victim_pos[1])
+        const [vx, vy] = project(d.victim_pos[0], d.victim_pos[1])
         const recent = t - d.t < KILL_FLASH_S
         if (recent) {
-          const [kx, ky] = toPx(d.killer_pos[0], d.killer_pos[1])
+          const [kx, ky] = project(d.killer_pos[0], d.killer_pos[1])
           ctx.strokeStyle = 'rgba(255,255,255,0.7)'
           ctx.lineWidth = 1.5
           ctx.setLineDash([4, 3])
@@ -200,7 +248,7 @@
       }
     }
 
-    for (const p of match.players) {
+    for (const p of playersInView) {
       const path = match.paths.players[p.slot]
       if (!path || i >= path.x.length || !path.health[i]) continue
       const colour = TEAM_COLOURS[p.team]
@@ -212,13 +260,13 @@
         let started = false
         for (let j = Math.max(0, i - TRAIL_S); j <= i; j++) {
           if (!path.health[j]) { started = false; continue }
-          const [px, py] = toPx(path.x[j], path.y[j])
+          const [px, py] = project(path.x[j], path.y[j])
           if (!started) { ctx.moveTo(px, py); started = true } else ctx.lineTo(px, py)
         }
         ctx.stroke()
         ctx.globalAlpha = 1
       }
-      const [px, py] = toPx(path.x[i], path.y[i])
+      const [px, py] = project(path.x[i], path.y[i])
       const r = p.slot === focus ? 8 : 6
       ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2)
       ctx.fillStyle = colour; ctx.fill()
@@ -239,7 +287,7 @@
     if (showObjectives) {
       for (const objective of standingObjectives) {
         if (!objective.position || match.map.radius <= 0) continue
-        const [px, py] = toPx(objective.position[0], objective.position[1])
+        const [px, py] = project(objective.position[0], objective.position[1])
         const colour = objective.team === null ? '#d7d3ca' : TEAM_COLOURS[objective.team]
         ctx.beginPath()
         ctx.arc(px, py, 9, 0, Math.PI * 2)
@@ -261,7 +309,7 @@
 
   $effect(() => {
     // Redraw whenever anything the drawing reads changes.
-    void [t, size, img, focus, showTrails, showDeaths, showObjectives, standingObjectives, showHeat]
+    void [t, size, img, focus, laneOnly, lanePlayerSlots, playersInView, deathsInView, showTrails, showDeaths, showObjectives, standingObjectives, showHeat]
     draw()
   })
 
@@ -284,13 +332,13 @@
   <div class="layout">
     <div class="stage">
       <div class="canvas-box" bind:this={box}>
-        <canvas bind:this={canvas} style:width="{size}px" style:height="{size}px" aria-label="Map of player positions at {mmss(t)}. Objective symbols disappear when their structures are taken."></canvas>
+        <canvas bind:this={canvas} style:width="{size}px" style:height="{size}px" aria-label={laneOnly ? `Zoomed lane view following ${followedName} at ${mmss(t)}` : `Map of player positions at ${mmss(t)}. Objective symbols disappear when their structures are taken.`}></canvas>
         {#if imgFailed}<p class="imgnote">Map image didn’t load, so positions are shown on a blank map.</p>{/if}
       </div>
       <div class="controls">
         <div class="range" role="group" aria-label="Replay range">
           <button class:active={!laneOnly} aria-pressed={!laneOnly} onclick={() => setLaneOnly(false)}>Full match</button>
-          <button class:active={laneOnly} aria-pressed={laneOnly} onclick={() => setLaneOnly(true)}>Lane phase · 10m</button>
+          <button class:active={laneOnly} aria-pressed={laneOnly} onclick={() => setLaneOnly(true)}>Lane view · 10m</button>
         </div>
         <button class="play" onclick={toggle} aria-label={playing ? 'Pause' : 'Play'}><Icon name={playing ? 'pause' : 'play'} size={16} /></button>
         <input type="range" id="map-time" min="0" max={playbackEnd} step="1" bind:value={t} oninput={() => (playing = false)} aria-label="Match time" />
@@ -307,12 +355,29 @@
         <label><input id="map-objectives" type="checkbox" bind:checked={showObjectives} /> Objectives</label>
         <label><input id="map-heat" type="checkbox" bind:checked={showHeat} /> Heatmap for {focusedPlayer?.hero.name ?? 'selected player'}</label>
       </div>
+      {#if laneOnly}
+        <p class="lane-context">
+          {#if focusedPlayer?.assigned_lane == null}
+            Assigned lane data is unavailable; following {followedName} and showing their purchases and kills.
+          {:else}
+            Following {followedName} in assigned lane {focusedPlayer.assigned_lane}; showing lane players, their purchases, and kills involving the lane.
+          {/if}
+        </p>
+      {/if}
       <p class="objective-legend">G Guardian · W Walker · P Patron · C Core · M Mid Boss. Symbols show standing objectives and disappear when taken; color shows the owning team (Mid Boss is neutral).</p>
     </div>
 
     <aside class="feed">
-      <h3 class="label">Live event feed · {liveMoments.length}</h3>
-      <p class="feed-hint">Events appear as playback reaches them. Scrub back to replay earlier moments.</p>
+      <h3 class="label">{laneOnly ? `${followedName}’s lane` : 'Live event feed'} · {liveMoments.length}</h3>
+      <p class="feed-hint">
+        {#if laneOnly && focusedPlayer?.assigned_lane == null}
+          Only the followed player’s buys and kills are shown.
+        {:else if laneOnly}
+          Only lane-player purchases and kills involving a lane player are shown.
+        {:else}
+          Events appear as playback reaches them. Scrub back to replay earlier moments.
+        {/if}
+      </p>
       <ol aria-live="polite" aria-relevant="additions">
         {#each liveMoments as d (d.id)}
           <li class:recent={Math.abs(t - d.t) < KILL_FLASH_S}>
@@ -373,6 +438,7 @@
   .toggles { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; font-size: 0.88rem; color: var(--muted); }
   .toggles label { display: inline-flex; gap: 0.4rem; align-items: center; cursor: pointer; }
   .objective-legend { max-width: 44rem; color: var(--faint); font-size: 0.72rem; }
+  .lane-context { max-width: 44rem; color: var(--muted); font-size: 0.75rem; }
   .feed { display: grid; gap: 0.5rem; align-content: start; min-width: 0; }
   .feed-hint { color: var(--muted); font-size: 0.75rem; }
   .feed ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 40rem; overflow-y: auto; }

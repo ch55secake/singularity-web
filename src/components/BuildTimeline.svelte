@@ -1,11 +1,12 @@
 <script lang="ts">
+  import { uniqueItemPurchases } from '../lib/build'
   import { mmss } from '../lib/format'
   import type { BuildEntry, MatchDetail } from '../lib/types'
 
   let { match, focus }: { match: MatchDetail; focus: number | null } = $props()
 
   const p = $derived(match.players.find((x) => x.slot === focus) ?? match.players[0])
-  const items = $derived(p.build.filter((b) => b.kind === 'item'))
+  const items = $derived(uniqueItemPurchases(p.build))
   // Each ability shows up once when unlocked and again for each upgrade.
   const abilities = $derived.by(() => {
     const rows = new Map<number, { name: string; icon: string | null; steps: BuildEntry[] }>()

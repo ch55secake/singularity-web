@@ -3,6 +3,7 @@
   import HeroIcon from './HeroIcon.svelte'
   import PlayerPicker from './PlayerPicker.svelte'
   import Icon from './Icon.svelte'
+  import { uniqueItemPurchases } from '../lib/build'
   import { mmss } from '../lib/format'
   import type { BuildEntry, MatchDetail, ObjectiveEvent, Player } from '../lib/types'
 
@@ -42,15 +43,13 @@
       victim: bySlot.get(death.victim) ?? null,
     }))
     const purchases: KeyMoment[] = match.players.flatMap((player) =>
-      player.build
-        .filter((entry) => entry.kind === 'item')
-        .map((entry, index) => ({
-          id: `purchase-${player.slot}-${index}`,
-          t: entry.t,
-          kind: 'purchase',
-          player,
-          item: entry,
-        })),
+      uniqueItemPurchases(player.build).map((entry, index) => ({
+        id: `purchase-${player.slot}-${index}`,
+        t: entry.t,
+        kind: 'purchase',
+        player,
+        item: entry,
+      })),
     )
     const objectives: KeyMoment[] = match.objectives.map((objective, index) => ({
       id: `objective-${index}`,

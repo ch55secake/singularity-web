@@ -8,8 +8,9 @@ match gets its own page at `/m/<uuid>` with a Leetify-style breakdown:
 - **Combat:** aim stats for each player against the lobby average (accuracy, hero crit
   rate, damage per minute, damage taken, how kills happened) and damage broken down
   by ability and by target
-- **Map:** a replay of every player's position with trails, kill markers, a heatmap for
-  the selected player and a kill feed. `?t=<seconds>` opens it at a moment.
+- **Map:** full-match or opening-10-minute position replay with trails, kill markers,
+  a selected-player heatmap, and an event feed that reveals purchases as playback advances.
+  `?t=<seconds>` opens it at a moment.
 - **Builds:** items in the order bought and when each ability was unlocked and upgraded
 - **Lanes:** tracked-player duos ranked by 10-minute assigned-lane net-worth lead, with
   early K/D/A, farm, hero combinations, match history, and whole-match win rate

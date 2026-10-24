@@ -4,17 +4,19 @@
   import PlayerPicker from './PlayerPicker.svelte'
   import Icon from './Icon.svelte'
   import { mmss } from '../lib/format'
-  import type { MatchDetail, ObjectiveEvent, Player } from '../lib/types'
+  import type { BuildEntry, MatchDetail, ObjectiveEvent, Player } from '../lib/types'
 
   let { match, focus = $bindable() }: { match: MatchDetail; focus: number | null } = $props()
 
   const TEAM_COLOURS = ['#e8a33a', '#4b93f2']
   const TRAIL_S = 12
   const KILL_FLASH_S = 6
+  const LANE_PHASE_END_S = 600
 
   // ?t=600 opens the replay at that second, so a moment can be shared as a link.
   let t = $state(Math.max(0, Number(new URLSearchParams(location.search).get('t')) || 0))
   let playing = $state(false)
+  let laneOnly = $state(false)
   let speed = $state(16)
   let showTrails = $state(true)
   let showDeaths = $state(true)
@@ -23,12 +25,13 @@
 
   const bySlot = $derived(new Map(match.players.map((p) => [p.slot, p])))
   const samples = $derived(Math.max(...Object.values(match.paths.players).map((p) => p.x.length)))
-  const tmax = $derived(Math.min(match.duration_s, (samples - 1) * match.paths.interval_s))
+  const replayEnd = $derived(Math.min(match.duration_s, (samples - 1) * match.paths.interval_s))
+  const playbackEnd = $derived(laneOnly ? Math.min(replayEnd, LANE_PHASE_END_S) : replayEnd)
   const deathsSoFar = $derived(match.deaths.filter((d) => d.t <= t))
   const focusedPlayer = $derived(focus === null ? null : bySlot.get(focus) ?? null)
   type KeyMoment =
     | { id: string; t: number; kind: 'kill'; killer: Player | null; victim: Player | null }
-    | { id: string; t: number; kind: 'purchase'; player: Player; item: string }
+    | { id: string; t: number; kind: 'purchase'; player: Player; item: BuildEntry }
     | { id: string; t: number; kind: 'objective'; objective: ObjectiveEvent }
   const keyMoments = $derived.by(() => {
     const kills: KeyMoment[] = match.deaths.map((death, index) => ({
@@ -38,15 +41,17 @@
       killer: bySlot.get(death.killer) ?? null,
       victim: bySlot.get(death.victim) ?? null,
     }))
-    const purchases: KeyMoment[] = focusedPlayer
-      ? focusedPlayer.build.filter((entry) => entry.kind === 'item').map((entry, index) => ({
-          id: `purchase-${focusedPlayer.slot}-${index}`,
+    const purchases: KeyMoment[] = match.players.flatMap((player) =>
+      player.build
+        .filter((entry) => entry.kind === 'item')
+        .map((entry, index) => ({
+          id: `purchase-${player.slot}-${index}`,
           t: entry.t,
           kind: 'purchase',
-          player: focusedPlayer,
-          item: entry.name,
-        }))
-      : []
+          player,
+          item: entry,
+        })),
+    )
     const objectives: KeyMoment[] = match.objectives.map((objective, index) => ({
       id: `objective-${index}`,
       t: objective.t,
@@ -55,6 +60,7 @@
     }))
     return [...kills, ...purchases, ...objectives].sort((a, b) => a.t - b.t)
   })
+  const liveMoments = $derived(keyMoments.filter((moment) => moment.t <= t).reverse())
 
   const objectiveLabel = (objective: ObjectiveEvent) => ({
     guardian: 'Guardian',
@@ -124,14 +130,14 @@
   let last = 0
   function tick(now: number) {
     if (!playing) return
-    if (last) t = Math.min(tmax, t + ((now - last) / 1000) * speed)
+    if (last) t = Math.min(playbackEnd, t + ((now - last) / 1000) * speed)
     last = now
-    if (t >= tmax) playing = false
+    if (t >= playbackEnd) playing = false
     else raf = requestAnimationFrame(tick)
   }
   function toggle() {
     if (playing) { playing = false; return }
-    if (t >= tmax) t = 0
+    if (t >= playbackEnd) t = 0
     playing = true
     last = 0
     raf = requestAnimationFrame(tick)
@@ -260,7 +266,13 @@
     draw()
   })
 
-  function jump(to: number) { t = Math.max(0, Math.min(tmax, to)); playing = false }
+  function setLaneOnly(enabled: boolean) {
+    playing = false
+    laneOnly = enabled
+    const end = enabled ? Math.min(replayEnd, LANE_PHASE_END_S) : replayEnd
+    t = Math.min(t, end)
+  }
+  function jump(to: number) { t = Math.max(0, Math.min(playbackEnd, to)); playing = false }
   const name = (p: Player | null | undefined) => p ? (p.member ? `${p.member.name} (${p.hero.name})` : p.hero.name) : 'World'
 </script>
 
@@ -277,9 +289,13 @@
         {#if imgFailed}<p class="imgnote">Map image didn’t load, so positions are shown on a blank map.</p>{/if}
       </div>
       <div class="controls">
+        <div class="range" role="group" aria-label="Replay range">
+          <button class:active={!laneOnly} aria-pressed={!laneOnly} onclick={() => setLaneOnly(false)}>Full match</button>
+          <button class:active={laneOnly} aria-pressed={laneOnly} onclick={() => setLaneOnly(true)}>Lane phase · 10m</button>
+        </div>
         <button class="play" onclick={toggle} aria-label={playing ? 'Pause' : 'Play'}><Icon name={playing ? 'pause' : 'play'} size={16} /></button>
-        <input type="range" id="map-time" min="0" max={tmax} step="1" bind:value={t} oninput={() => (playing = false)} aria-label="Match time" />
-        <span class="time num">{mmss(t)} / {mmss(tmax)}</span>
+        <input type="range" id="map-time" min="0" max={playbackEnd} step="1" bind:value={t} oninput={() => (playing = false)} aria-label="Match time" />
+        <span class="time num">{mmss(t)} / {mmss(playbackEnd)}</span>
         <label class="speed">Speed
           <select id="map-speed" bind:value={speed}>
             {#each [4, 8, 16, 32, 64] as s (s)}<option value={s}>{s}×</option>{/each}
@@ -296,10 +312,10 @@
     </div>
 
     <aside class="feed">
-      <h3 class="label">Key moments · {keyMoments.length}</h3>
-      {#if !focusedPlayer}<p class="feed-hint">Select a player above to include their item purchases.</p>{/if}
-      <ol>
-        {#each [...keyMoments].reverse() as d (d.id)}
+      <h3 class="label">Live event feed · {liveMoments.length}</h3>
+      <p class="feed-hint">Events appear as playback reaches them. Scrub back to replay earlier moments.</p>
+      <ol aria-live="polite" aria-relevant="additions">
+        {#each liveMoments as d (d.id)}
           <li class:recent={Math.abs(t - d.t) < KILL_FLASH_S}>
             <button onclick={() => jump(d.kind === 'kill' ? d.t - 4 : d.t)} title={d.kind === 'kill' ? 'Jump to 4 seconds before this kill' : d.kind === 'objective' ? 'Jump to when this objective was taken' : 'Jump to this item purchase'}>
               <span class="ft num">{mmss(d.t)}</span>
@@ -311,8 +327,15 @@
                 <span class="kn">{name(d.victim)}</span>
               {:else if d.kind === 'purchase'}
                 <HeroIcon hero={d.player.hero} team={d.player.team} size={22} />
-                <span class="event-kind">BUY</span>
-                <span class="kn">{d.item}</span>
+                {#if d.item.icon}
+                  <img class="item-icon" src={d.item.icon} alt="" loading="lazy" />
+                {:else}
+                  <span class="item-icon item-placeholder" aria-hidden="true">{d.item.name.slice(0, 2)}</span>
+                {/if}
+                <span class="purchase-copy">
+                  <span class="kn">{d.item.name}</span>
+                  <small>{d.player.member?.name ?? d.player.hero.name}</small>
+                </span>
               {:else}
                 <span class="objective-symbol" class:team0={d.objective.team === 0} class:team1={d.objective.team === 1}>{objectiveSymbol(d.objective.kind)}</span>
                 <span class="event-kind">OBJ</span>
@@ -321,7 +344,7 @@
             </button>
           </li>
         {:else}
-          <li class="empty"><Icon name="inbox" size={18} />No key moments yet. Select a player above to include item purchases.</li>
+          <li class="empty"><Icon name="inbox" size={18} />No events yet. Play or scrub the replay to see kills, purchases, and objectives.</li>
         {/each}
       </ol>
     </aside>
@@ -335,6 +358,10 @@
   canvas { display: block; border-radius: 6px; }
   .imgnote { position: absolute; left: 0.75rem; bottom: 0.75rem; font-size: 0.8rem; color: var(--muted); }
   .controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; max-width: 44rem; }
+  .range { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel-2); }
+  .range button { padding: 0.35rem 0.55rem; border: 0; border-radius: 5px; background: transparent; color: var(--muted); font: inherit; font-size: 0.72rem; cursor: pointer; white-space: nowrap; }
+  .range button:hover { color: var(--fg); }
+  .range button.active { background: var(--panel); color: var(--fg); box-shadow: 0 1px 3px rgb(0 0 0 / 0.25); }
   .play { width: 2.4rem; height: 2.4rem; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: var(--panel-2); cursor: pointer; font-size: 0.85rem; transition: border-color var(--duration-fast) ease, background var(--duration-fast) ease, transform var(--duration-fast) var(--ease-out); }
   .play:hover { border-color: var(--faint); background: color-mix(in srgb, var(--panel-2) 92%, var(--sapphire)); transform: scale(1.04); }
   .play:active { transform: scale(0.98); }
@@ -357,6 +384,10 @@
   .kn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
   .arrow { color: var(--faint); }
   .event-kind { flex: none; color: var(--amber); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.05em; }
+  .item-icon { width: 1.45rem; height: 1.45rem; flex: none; border: 1px solid var(--line); border-radius: 4px; background: var(--panel-2); object-fit: contain; }
+  .item-placeholder { display: grid; place-items: center; color: var(--muted); font-size: 0.52rem; font-weight: 700; }
+  .purchase-copy { display: grid; min-width: 0; flex: 1; }
+  .purchase-copy small { overflow: hidden; color: var(--muted); font-size: 0.62rem; text-overflow: ellipsis; white-space: nowrap; }
   .empty { display: flex; align-items: center; gap: 0.5rem; color: var(--muted); font-size: 0.85rem; padding: 0.65rem; border: 1px dashed var(--line); border-radius: 6px; }
   @media (max-width: 60rem) { .layout { grid-template-columns: 1fr; } .feed ol { max-height: 18rem; } }
 </style>

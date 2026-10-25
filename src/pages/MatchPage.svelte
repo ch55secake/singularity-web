@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getLaneStats, getMatch } from '../lib/api'
+  import { getLaneStats, getMatch, getResourceReparseStatus, requestResourceReparse } from '../lib/api'
   import { TEAMS, fmt, mmss, when } from '../lib/format'
   import { route, setHash } from '../lib/router.svelte'
   import Scoreboard from '../components/Scoreboard.svelte'
@@ -15,7 +15,7 @@
   import StatePanel from '../components/StatePanel.svelte'
   import Icon from '../components/Icon.svelte'
   import { notify } from '../lib/toast.svelte'
-  import type { LaneStats, MatchDetail } from '../lib/types'
+  import type { LaneStats, MatchDetail, ResourceReparseStatus } from '../lib/types'
 
   let { uuid }: { uuid: string } = $props()
 
@@ -34,6 +34,8 @@
   let laneStats = $state<LaneStats | null>(null)
   let laneError = $state<string | null>(null)
   let laneState = $state<'idle' | 'loading' | 'ready' | 'error'>('idle')
+  let resourceReparseStatus = $state<ResourceReparseStatus | null>(null)
+  let attemptedResourceReparse: string | null = null
   const focusedPlayer = $derived(match?.players.find((p) => p.slot === focus) ?? null)
 
   function selectTab(id: string) {
@@ -80,14 +82,86 @@
   }
 
   $effect(() => {
-    getMatch(uuid).then(
-    (m) => {
-      match = m
-      const firstMember = m.players.find((p) => p.member)
-      focus = (firstMember ?? [...m.players].sort((a, b) => b.hero_damage - a.hero_damage)[0]).slot
-    },
-    (e: Error) => (error = e.message),
-  )
+    const matchUuid = uuid
+    let cancelled = false
+    resourceReparseStatus = null
+    getMatch(matchUuid).then(
+      (loaded) => {
+        if (cancelled) return
+        match = loaded
+        const firstMember = loaded.players.find((p) => p.member)
+        focus = (firstMember ?? [...loaded.players].sort((a, b) => b.hero_damage - a.hero_damage)[0]).slot
+      },
+      (e: Error) => {
+        if (!cancelled) error = e.message
+      },
+    )
+    return () => { cancelled = true }
+  })
+
+  $effect(() => {
+    const currentMatch = match
+    const currentTab = tab
+    const matchUuid = uuid
+    if (
+      currentTab !== 'map'
+      || !currentMatch
+      || currentMatch.uuid !== matchUuid
+      || currentMatch.resources?.length !== 0
+      || currentMatch.duration_s < 120
+      || attemptedResourceReparse === matchUuid
+    ) return
+
+    // Don't force work while browsing other tabs; the map tab queues it once.
+    attemptedResourceReparse = matchUuid
+    let cancelled = false
+    let pollTimer: number | undefined
+    let cancelWait: (() => void) | undefined
+    const waitForPoll = () => new Promise<void>((resolve) => {
+      cancelWait = resolve
+      pollTimer = window.setTimeout(() => {
+        pollTimer = undefined
+        cancelWait = undefined
+        resolve()
+      }, 30_000)
+    })
+
+    async function reparseAndPoll() {
+      try {
+        let status = await requestResourceReparse(matchUuid)
+        if (cancelled) return
+        resourceReparseStatus = status
+        if (status.status === 'completed') {
+          match = await getMatch(matchUuid)
+          return
+        }
+        for (let attempt = 0; status.status === 'pending' && attempt < 20; attempt++) {
+          await waitForPoll()
+          if (cancelled) return
+          status = await getResourceReparseStatus(matchUuid)
+          resourceReparseStatus = status
+          if (status.status === 'completed') {
+            match = await getMatch(matchUuid)
+            return
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          resourceReparseStatus = {
+            status: 'failed',
+            requested_at: null,
+            error_code: 'request_failed',
+          }
+        }
+      }
+    }
+
+    void reparseAndPoll()
+    return () => {
+      cancelled = true
+      if (pollTimer !== undefined) window.clearTimeout(pollTimer)
+      cancelWait?.()
+    }
   })
 
   $effect(() => {
@@ -169,7 +243,7 @@
               <DamageBreakdown {match} {focus} />
             </section>
           {:else if tab === 'map'}
-            <MapView {match} bind:focus />
+            <MapView {match} {resourceReparseStatus} bind:focus />
           {:else if tab === 'lane'}
             {#if laneState === 'idle' || laneState === 'loading'}
               <p class="lane-loading" aria-live="polite">Loading lane stats…</p>

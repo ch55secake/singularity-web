@@ -5,9 +5,13 @@
   import Icon from './Icon.svelte'
   import { uniqueItemPurchases } from '../lib/build'
   import { mmss } from '../lib/format'
-  import type { BuildEntry, MatchDetail, ObjectiveEvent, Path, Player, ReplayResourceEvent } from '../lib/types'
+  import type { BuildEntry, MatchDetail, ObjectiveEvent, Path, Player, ReplayResourceEvent, ResourceReparseStatus } from '../lib/types'
 
-  let { match, focus = $bindable() }: { match: MatchDetail; focus: number | null } = $props()
+  let { match, focus = $bindable(), resourceReparseStatus = null }: {
+    match: MatchDetail
+    focus: number | null
+    resourceReparseStatus?: ResourceReparseStatus | null
+  } = $props()
 
   const TEAM_COLOURS = ['#e8a33a', '#4b93f2']
   const TRAIL_S = 12
@@ -450,6 +454,15 @@
       {/if}
       <p class="objective-legend">G Guardian · W Walker · P Patron · C Core · M Mid Boss. Symbols show standing objectives and disappear when taken; color shows the owning team (Mid Boss is neutral).</p>
       <p class="objective-legend">Gold △ marks active jungle camps; purple S marks a Sinner’s Sacrifice entity while present in replay data. S does not indicate readiness; icons require parsed replay data.</p>
+      {#if match.resources?.length === 0 && resourceReparseStatus?.status === 'pending'}
+        <p class="lane-context" role="status">Resource markers are missing; a replay reparse is queued. This map will refresh when it completes.</p>
+      {:else if match.resources?.length === 0 && resourceReparseStatus?.status === 'unavailable'}
+        <p class="lane-context" role="status">This match’s replay is no longer available to reparse, so resource markers can’t be recovered.</p>
+      {:else if match.resources?.length === 0 && resourceReparseStatus?.status === 'completed'}
+        <p class="lane-context" role="status">Replay reparse finished, but it produced no resource markers for this match.</p>
+      {:else if match.resources?.length === 0 && resourceReparseStatus?.status === 'failed'}
+        <p class="lane-context" role="status">The replay reparse could not be queued. Try reloading this match later.</p>
+      {/if}
     </div>
 
     <aside class="feed">

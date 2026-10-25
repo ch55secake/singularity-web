@@ -230,6 +230,15 @@ export interface ObjectiveEvent {
   position: [number, number] | null;
 }
 
+export interface ReplayResourceEvent {
+  t: number;
+  entity_index: number;
+  event_index: number;
+  kind: 'neutral' | 'sinner';
+  active: boolean;
+  position: [number, number];
+}
+
 export interface Path {
   x: number[];
   y: number[];
@@ -249,6 +258,8 @@ export interface MatchDetail {
   players: Player[];
   deaths: Death[];
   objectives: ObjectiveEvent[];
+  /** Replay-derived resource presence transitions; absent on older API responses. */
+  resources?: ReplayResourceEvent[];
   paths: { interval_s: number; players: Record<string, Path> };
   map: { radius: number; image: string; objective_positions: Record<string, [number, number]> };
 }

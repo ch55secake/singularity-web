@@ -239,6 +239,12 @@ export interface ReplayResourceEvent {
   position: [number, number];
 }
 
+export interface ResourceReparseStatus {
+  status: 'idle' | 'pending' | 'completed' | 'unavailable' | 'failed';
+  requested_at: number | null;
+  error_code: string | null;
+}
+
 export interface Path {
   x: number[];
   y: number[];

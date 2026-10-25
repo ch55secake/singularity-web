@@ -162,6 +162,13 @@ camp markers in the UI, while Sinner’s Sacrifice markers are shown separately.
 `active` indicates that the entity is present in replay data (and alive for
 neutral creeps), not that a Sinner’s Sacrifice machine is ready to be used.
 
+When `resources` is empty, the web app may call
+`POST /api/matches/{uuid}/resources/reparse`. The authenticated endpoint queues
+a rate-limited request for the replay worker and returns its status. Poll
+`GET /api/matches/{uuid}/resources/reparse` until `status` is `completed` or
+`unavailable`; then fetch the match detail again. Requests have a one-hour
+per-match cooldown.
+
 ### Damage by source
 
 In `damage_matrix`, hero damage is `stat_type == 0` against **enemy** player slots.

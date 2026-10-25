@@ -10,7 +10,8 @@ match gets its own page at `/m/<uuid>` with a Leetify-style breakdown:
   by ability and by target
 - **Map:** full-match position replay, plus an opening-10-minute lane view that zooms in
   on the followed player and shows their assigned lane’s players, purchases, and kills.
-  `?t=<seconds>` opens the replay at a moment.
+  Replay-aware jungle and Sinner’s Sacrifice markers follow playback time when replay
+  data is available. `?t=<seconds>` opens the replay at a moment.
 - **Builds:** items in the order bought and when each ability was unlocked and upgraded
 - **Lanes:** tracked-player duos ranked by 10-minute assigned-lane net-worth lead, with
   early K/D/A, farm, hero combinations, match history, and whole-match win rate

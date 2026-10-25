@@ -152,6 +152,15 @@ Everything in the summary, plus:
 | `deaths[]` | `players[].death_details[]` |
 | `paths` | `match_paths`, converted to world coordinates |
 | `map` | map radius and minimap image from the assets API |
+| `resources[]` | Replay-derived active/inactive transitions for neutral camps and Sinner’s Sacrifice |
+
+`resources[]` is ordered by replay time and carries `t`, `entity_index`,
+`event_index`, `kind` (`neutral` or `sinner`), `active`, and world `position`.
+The map applies these transitions at the current playback time; matches without
+parsed replay data return an empty array. Neutral entities are grouped into
+camp markers in the UI, while Sinner’s Sacrifice markers are shown separately.
+`active` indicates that the entity is present in replay data (and alive for
+neutral creeps), not that a Sinner’s Sacrifice machine is ready to be used.
 
 ### Damage by source
 

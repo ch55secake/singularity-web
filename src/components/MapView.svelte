@@ -5,7 +5,7 @@
   import Icon from './Icon.svelte'
   import { uniqueItemPurchases } from '../lib/build'
   import { mmss } from '../lib/format'
-  import type { BuildEntry, MatchDetail, ObjectiveEvent, Path, Player } from '../lib/types'
+  import type { BuildEntry, MatchDetail, ObjectiveEvent, Path, Player, ReplayResourceEvent } from '../lib/types'
 
   let { match, focus = $bindable() }: { match: MatchDetail; focus: number | null } = $props()
 
@@ -23,6 +23,8 @@
   let showTrails = $state(true)
   let showDeaths = $state(true)
   let showObjectives = $state(true)
+  let showJungle = $state(true)
+  let showSinners = $state(true)
   let showHeat = $state(false)
 
   const bySlot = $derived(new Map(match.players.map((p) => [p.slot, p])))
@@ -128,6 +130,37 @@
   const standingObjectives = $derived(
     objectiveMarkers.filter((objective) => objective.capturedAt === null || t < objective.capturedAt),
   )
+  const activeResources = $derived.by(() => {
+    const active = new Map<string, ReplayResourceEvent>()
+    for (const event of match.resources ?? []) {
+      if (event.t > t) break
+      const key = `${event.kind}-${event.entity_index}`
+      if (event.active) active.set(key, event)
+      else active.delete(key)
+    }
+    return [...active.values()]
+  })
+  const jungleCamps = $derived.by(() => {
+    const clusters: { x: number; y: number; count: number }[] = []
+    const campRadius = 450
+    for (const resource of activeResources
+      .filter((event) => event.kind === 'neutral')
+      .sort((a, b) => a.entity_index - b.entity_index)) {
+      const [x, y] = resource.position
+      const cluster = clusters.find((candidate) =>
+        (candidate.x - x) ** 2 + (candidate.y - y) ** 2 <= campRadius ** 2,
+      )
+      if (cluster) {
+        cluster.x = (cluster.x * cluster.count + x) / (cluster.count + 1)
+        cluster.y = (cluster.y * cluster.count + y) / (cluster.count + 1)
+        cluster.count += 1
+      } else {
+        clusters.push({ x, y, count: 1 })
+      }
+    }
+    return clusters
+  })
+  const activeSinners = $derived(activeResources.filter((event) => event.kind === 'sinner'))
 
   let canvas: HTMLCanvasElement
   let box: HTMLDivElement
@@ -305,11 +338,60 @@
         ctx.textBaseline = 'alphabetic'
       }
     }
+
+    if (showJungle) {
+      for (const camp of jungleCamps) {
+        const [px, py] = project(camp.x, camp.y)
+        ctx.beginPath()
+        ctx.arc(px, py, 8, 0, Math.PI * 2)
+        ctx.fillStyle = '#11141a'
+        ctx.fill()
+        ctx.strokeStyle = '#e0b84a'
+        ctx.lineWidth = 2
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.moveTo(px, py - 4)
+        ctx.lineTo(px + 4, py + 3)
+        ctx.lineTo(px - 4, py + 3)
+        ctx.closePath()
+        ctx.fillStyle = '#e0b84a'
+        ctx.fill()
+        if (camp.count > 1) {
+          ctx.font = '700 8px "Public Sans", system-ui, sans-serif'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillStyle = '#11141a'
+          ctx.fillText(String(camp.count), px, py + 0.5)
+          ctx.textAlign = 'start'
+          ctx.textBaseline = 'alphabetic'
+        }
+      }
+    }
+
+    if (showSinners) {
+      for (const sinner of activeSinners) {
+        const [px, py] = project(sinner.position[0], sinner.position[1])
+        ctx.beginPath()
+        ctx.arc(px, py, 9, 0, Math.PI * 2)
+        ctx.fillStyle = '#11141a'
+        ctx.fill()
+        ctx.strokeStyle = '#bd91f0'
+        ctx.lineWidth = 2.5
+        ctx.stroke()
+        ctx.font = '700 10px "Public Sans", system-ui, sans-serif'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillStyle = '#e4d0ff'
+        ctx.fillText('S', px, py)
+        ctx.textAlign = 'start'
+        ctx.textBaseline = 'alphabetic'
+      }
+    }
   }
 
   $effect(() => {
     // Redraw whenever anything the drawing reads changes.
-    void [t, size, img, focus, laneOnly, lanePlayerSlots, playersInView, deathsInView, showTrails, showDeaths, showObjectives, standingObjectives, showHeat]
+    void [t, size, img, focus, laneOnly, lanePlayerSlots, playersInView, deathsInView, showTrails, showDeaths, showObjectives, standingObjectives, activeResources, jungleCamps, activeSinners, showJungle, showSinners, showHeat]
     draw()
   })
 
@@ -332,7 +414,7 @@
   <div class="layout">
     <div class="stage">
       <div class="canvas-box" bind:this={box}>
-        <canvas bind:this={canvas} style:width="{size}px" style:height="{size}px" aria-label={laneOnly ? `Zoomed lane view following ${followedName} at ${mmss(t)}` : `Map of player positions at ${mmss(t)}. Objective symbols disappear when their structures are taken.`}></canvas>
+        <canvas bind:this={canvas} style:width="{size}px" style:height="{size}px" aria-label={laneOnly ? `Zoomed lane view following ${followedName} at ${mmss(t)}` : `Map of player positions and replay-time jungle resources at ${mmss(t)}.`}></canvas>
         {#if imgFailed}<p class="imgnote">Map image didn’t load, so positions are shown on a blank map.</p>{/if}
       </div>
       <div class="controls">
@@ -353,6 +435,8 @@
         <label><input id="map-trails" type="checkbox" bind:checked={showTrails} /> Trails</label>
         <label><input id="map-deaths" type="checkbox" bind:checked={showDeaths} /> Deaths</label>
         <label><input id="map-objectives" type="checkbox" bind:checked={showObjectives} /> Objectives</label>
+        <label><input id="map-jungle" type="checkbox" bind:checked={showJungle} /> Jungle</label>
+        <label><input id="map-sinners" type="checkbox" bind:checked={showSinners} /> Sinner’s Sacrifice</label>
         <label><input id="map-heat" type="checkbox" bind:checked={showHeat} /> Heatmap for {focusedPlayer?.hero.name ?? 'selected player'}</label>
       </div>
       {#if laneOnly}
@@ -365,6 +449,7 @@
         </p>
       {/if}
       <p class="objective-legend">G Guardian · W Walker · P Patron · C Core · M Mid Boss. Symbols show standing objectives and disappear when taken; color shows the owning team (Mid Boss is neutral).</p>
+      <p class="objective-legend">Gold △ marks active jungle camps; purple S marks a Sinner’s Sacrifice entity while present in replay data. S does not indicate readiness; icons require parsed replay data.</p>
     </div>
 
     <aside class="feed">

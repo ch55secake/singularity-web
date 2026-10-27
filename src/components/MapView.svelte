@@ -32,8 +32,10 @@
   let showHeat = $state(false)
 
   const bySlot = $derived(new Map(match.players.map((p) => [p.slot, p])))
-  const samples = $derived(Math.max(...Object.values(match.paths.players).map((p) => p.x.length)))
-  const replayEnd = $derived(Math.min(match.duration_s, (samples - 1) * match.paths.interval_s))
+  const samples = $derived(Math.max(0, ...Object.values(match.paths.players).map((p) => p.x.length)))
+  const replayEnd = $derived(
+    samples === 0 ? 0 : Math.min(match.duration_s, (samples - 1) * match.paths.interval_s),
+  )
   const playbackEnd = $derived(laneOnly ? Math.min(replayEnd, LANE_PHASE_END_S) : replayEnd)
   const deathsSoFar = $derived(match.deaths.filter((d) => d.t <= t))
   const focusedPlayer = $derived(focus === null ? null : bySlot.get(focus) ?? null)
@@ -443,6 +445,9 @@
         <label><input id="map-sinners" type="checkbox" bind:checked={showSinners} /> Sinner’s Sacrifice</label>
         <label><input id="map-heat" type="checkbox" bind:checked={showHeat} /> Heatmap for {focusedPlayer?.hero.name ?? 'selected player'}</label>
       </div>
+      {#if samples === 0}
+        <p class="lane-context" role="status">Player position history isn’t available for this match.</p>
+      {/if}
       {#if laneOnly}
         <p class="lane-context">
           {#if focusedPlayer?.assigned_lane == null}

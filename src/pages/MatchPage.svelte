@@ -107,7 +107,7 @@
       currentTab !== 'map'
       || !currentMatch
       || currentMatch.uuid !== matchUuid
-      || currentMatch.resources?.length !== 0
+      || (currentMatch.resources?.length ?? 0) > 0
       || currentMatch.duration_s < 120
       || attemptedResourceReparse === matchUuid
     ) return

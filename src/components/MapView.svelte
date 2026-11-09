@@ -33,8 +33,12 @@
 
   const bySlot = $derived(new Map(match.players.map((p) => [p.slot, p])))
   const samples = $derived(Math.max(0, ...Object.values(match.paths.players).map((p) => p.x.length)))
+  const pathReplayEnd = $derived(
+    samples === 0 ? 0 : (samples - 1) * match.paths.interval_s,
+  )
+  const resourceReplayEnd = $derived(Math.max(0, ...(match.resources ?? []).map((event) => event.t)))
   const replayEnd = $derived(
-    samples === 0 ? 0 : Math.min(match.duration_s, (samples - 1) * match.paths.interval_s),
+    Math.min(match.duration_s, Math.max(pathReplayEnd, resourceReplayEnd)),
   )
   const playbackEnd = $derived(laneOnly ? Math.min(replayEnd, LANE_PHASE_END_S) : replayEnd)
   const deathsSoFar = $derived(match.deaths.filter((d) => d.t <= t))
@@ -138,7 +142,8 @@
   )
   const activeResources = $derived.by(() => {
     const active = new Map<string, ReplayResourceEvent>()
-    for (const event of match.resources ?? []) {
+    const events = [...(match.resources ?? [])].sort((a, b) => a.t - b.t || a.event_index - b.event_index)
+    for (const event of events) {
       if (event.t > t) break
       const key = `${event.kind}-${event.entity_index}`
       if (event.active) active.set(key, event)
@@ -146,6 +151,7 @@
     }
     return [...active.values()]
   })
+  const hasNoResourceEvents = $derived((match.resources?.length ?? 0) === 0)
   const jungleCamps = $derived.by(() => {
     const clusters: { x: number; y: number; count: number }[] = []
     const campRadius = 450
@@ -459,13 +465,13 @@
       {/if}
       <p class="objective-legend">G Guardian · W Walker · P Patron · C Core · M Mid Boss. Symbols show standing objectives and disappear when taken; color shows the owning team (Mid Boss is neutral).</p>
       <p class="objective-legend">Gold △ marks active jungle camps; purple S marks a Sinner’s Sacrifice entity while present in replay data. S does not indicate readiness; icons require parsed replay data.</p>
-      {#if match.resources?.length === 0 && resourceReparseStatus?.status === 'pending'}
+      {#if hasNoResourceEvents && resourceReparseStatus?.status === 'pending'}
         <p class="lane-context" role="status">Resource markers are missing; a replay reparse is queued. This map will refresh when it completes.</p>
-      {:else if match.resources?.length === 0 && resourceReparseStatus?.status === 'unavailable'}
+      {:else if hasNoResourceEvents && resourceReparseStatus?.status === 'unavailable'}
         <p class="lane-context" role="status">This match’s replay is no longer available to reparse, so resource markers can’t be recovered.</p>
-      {:else if match.resources?.length === 0 && resourceReparseStatus?.status === 'completed'}
+      {:else if hasNoResourceEvents && resourceReparseStatus?.status === 'completed'}
         <p class="lane-context" role="status">Replay reparse finished, but it produced no resource markers for this match.</p>
-      {:else if match.resources?.length === 0 && resourceReparseStatus?.status === 'failed'}
+      {:else if hasNoResourceEvents && resourceReparseStatus?.status === 'failed'}
         <p class="lane-context" role="status">The replay reparse could not be queued. Try reloading this match later.</p>
       {/if}
     </div>
